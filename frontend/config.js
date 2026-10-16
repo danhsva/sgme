@@ -1,3 +1,3 @@
 window.SGME_CONFIG = {
-    API_URL: "https://dependent-cornwall-bills-woods.trycloudflare.com"
+    API_URL: "https://did-organisations-pulling-metropolitan.trycloudflare.com"
 };
