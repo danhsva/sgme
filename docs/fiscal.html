@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGME - Fiscal de Contrato</title>
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #f4f7f6; --card: #ffffff; --text: #1e293b; --border: #e2e8f0; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --info: #0284c7; --row-alert: #fffbeb; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
+        .hidden { display: none !important; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid var(--border); }
+        h2, h3 { color: var(--primary-dark); margin-bottom: 15px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #475569; }
+        input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px; font-size: 14px; background: #f8fafc; text-transform: uppercase; }
+        input#formUserLogin { text-transform: lowercase; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: var(--primary-dark); }
+        .btn-danger { background: var(--danger); } .btn-success { background: var(--success); } .btn-secondary { background: #64748b; } .btn-warning { background: var(--warning); color: #fff; } .btn-info { background: var(--info); color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 11px; margin-bottom: 2px; } .btn-block { width: 100%; }
+        .badge { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .app-layout { display: flex; width: 100%; }
+        .sidebar { width: 65px; background: var(--card); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0; z-index: 999; display: flex; flex-direction: column; overflow-x: hidden; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 5px rgba(0,0,0,0.05); white-space: nowrap; }
+        .sidebar:hover { width: 250px; }
+        .sidebar-logo { padding: 20px; font-size: 18px; font-weight: bold; color: var(--primary-dark); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
+        .sidebar-menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 14px 20px; cursor: pointer; background: none; border: none; color: #475569; font-size: 14px; font-weight: 600; text-align: left; width: 100%; border-left: 4px solid transparent; }
+        .sidebar-item:hover { background: #f1f5f9; color: var(--primary); }
+        .sidebar-item.active { background: #e0f2fe; color: var(--primary-dark); border-left-color: var(--primary); }
+        .sidebar-icon { font-size: 18px; min-width: 20px; text-align: center; }
+        .sidebar-text { opacity: 0; transition: opacity 0.3s; }
+        .sidebar:hover .sidebar-text { opacity: 1; }
+        .main-content { margin-left: 65px; padding: 20px; width: calc(100% - 65px); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
+        th { background: #f1f5f9; cursor: pointer; }
+        tr:hover { background: #f8fafc; }
+        .filter-row input, .filter-row select { padding: 6px; margin: 0; font-size: 11px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; }
+        .inativo td { opacity: 0.5; background: #f1f5f9; }
+        .row-os-ativa { background-color: var(--row-alert) !important; border-left: 3px solid var(--warning); }
+        .row-em-analise { background-color: #eef2ff !important; border-left: 4px solid #4f46e5 !important; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .dash-card { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+        .dash-value { font-size: 22px; font-weight: bold; margin-top: 6px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .modal-box { background: #ffffff; border-radius: 12px; padding: 25px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; }
+        .row { display: flex; gap: 10px; } .col { flex: 1; }
+        .timeline { border-left: 3px solid var(--border); padding-left: 15px; margin-top: 15px; font-size: 13px; }
+        .timeline-item { margin-bottom: 15px; position: relative; }
+        .timeline-item::before { content: ''; position: absolute; left: -24px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
+        .timeline-date { font-size: 11px; color: #64748b; font-weight: bold; }
+        .timeline-user { color: var(--primary-dark); font-weight: bold; margin-bottom: 4px; }
+        .timeline-text { background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid var(--border); margin-top: 4px; }
+        .box-check-contratos { max-height: 140px; overflow-y: auto; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: #fff; margin-bottom: 15px; }
+        .check-item { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px; cursor: pointer; }
+        .check-item input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo"><span class="sidebar-icon">⚙️</span><span class="sidebar-text">SGME Fiscal</span></div>
+            <div class="sidebar-menu">
+                <button id="tabGeralOS" class="sidebar-item" onclick="mudarAba('geralOS')"><span class="sidebar-icon">🛠️</span><span class="sidebar-text">Ordens de Serviço</span></button>
+                <button id="tabPmoc" class="sidebar-item" onclick="mudarAba('pmoc')"><span class="sidebar-icon">📅</span><span class="sidebar-text">PMOC / Preventivas</span></button>
+                <button id="tabGeralEqs" class="sidebar-item" onclick="mudarAba('geralEqs')"><span class="sidebar-icon">💻</span><span class="sidebar-text">Equipamentos</span></button>
+                <button id="tabAdmUsers" class="sidebar-item" onclick="mudarAba('admUsers')"><span class="sidebar-icon">👥</span><span class="sidebar-text">Equipe</span></button>
+            </div>
+        </nav>
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h3 style="margin: 0; color: #334155;">Painel do Fiscal</h3>
+                    <div style="margin-top: 4px;"><span id="usuarioNomeDisplay" style="font-weight: 600; font-size: 14px;"></span> <span class="badge">FISCAL</span></div>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    
+                    <button class="btn-warning" onclick="abrirNovaOSAvulsa()">+ MANUTENÇÃO</button>
+                    <button class="btn-success" onclick="abrirNovaInstalacao()">+ INSTALAÇÃO / SUBSTITUIÇÃO</button>
+                    <button onclick="fazerLogout()" class="btn-danger">Sair</button>
+                </div>
+            </div>
+            <div id="conteudoAba" class="card"></div>
+        </main>
+    </div>
+
+    <!-- MODAL EQUIPAMENTO (1:N - ESCOLHA DE UM DOS CONTRATOS DO FISCAL) -->
+    <div id="modalFormEquip" class="modal-overlay hidden"><div class="modal-box" style="max-width: 700px;"><h3 id="tituloModalEquip">Inclusão de Equipamento no Contrato</h3><form onsubmit="salvarEquipamento(event)"><input type="hidden" id="formEqId"><div class="row"><div class="col"><label>Comarca:</label><select id="formEqComarca" required></select></div><div class="col"><label>Prédio:</label><input type="text" id="formEqPredio" required></div><div class="col"><label>Sala (Local):</label><input type="text" id="formEqSala" required></div></div><div class="row"><div class="col"><label>Tipo:</label><select id="formEqTipo" required><option value="">Selecione...</option><option value="HI WALL">HI WALL</option><option value="PISO TETO">PISO TETO</option><option value="CASSETE">CASSETE</option><option value="JANELEIRO">JANELEIRO</option><option value="MULTI SPLIT">MULTI SPLIT</option><option value="SELF">SELF</option><option value="CORTINA DE AR">CORTINA DE AR</option><option value="SPLITÃO">SPLITÃO</option><option value="OUTRO">OUTRO</option></select></div><div class="col"><label>Capacidade:</label><select id="formEqCap"><option value="">Selecione...</option><option value="7000 BTUS">7000 BTUS</option><option value="9000 BTUS">9000 BTUS</option><option value="10000 BTUS">10000 BTUS</option><option value="12000 BTUS">12000 BTUS</option><option value="18000 BTUS">18000 BTUS</option><option value="21000 BTUS">21000 BTUS</option><option value="22000 BTUS">22000 BTUS</option><option value="24000 BTUS">24000 BTUS</option><option value="30000 BTUS">30000 BTUS</option><option value="36000 BTUS">36000 BTUS</option><option value="48000 BTUS">48000 BTUS</option><option value="60000 BTUS">60000 BTUS</option><option value="3 TR">3 TR</option><option value="5 TR">5 TR</option><option value="7.5 TR">7.5 TR</option><option value="10 TR">10 TR</option><option value="15 TR">15 TR</option></select></div></div><div class="row"><div class="col"><label>Marca:</label><input type="text" id="formEqMarca"></div><div class="col"><label>Tombo:</label><input type="text" id="formEqTombo"></div></div><div><label>Vincular a qual Contrato:</label><select id="formEqContrato" required></select></div><div style="display:flex;gap:10px;margin-top:15px;"><button type="submit" class="btn-success btn-block">Salvar Equipamento</button><button type="button" class="btn-secondary btn-block" onclick="fecharModal('modalFormEquip')">Cancelar</button></div></form></div></div>
+
+    <!-- MODAL USUÁRIO / EQUIPE (N:N - SELEÇÃO DE CONTRATOS DO FISCAL) -->
+    <div id="modalFormUser" class="modal-overlay hidden"><div class="modal-box" style="max-width: 480px;"><h3 id="tituloModalUser">Novo Integrante da Equipe</h3><form onsubmit="salvarUsuario(event)"><input type="hidden" id="formUserId"><label>Nome Completo:</label><input type="text" id="formUserNome" required><label>Login:</label><input type="text" id="formUserLogin" required><label>Perfil:</label><select id="formUserPerfil" required><option value="executante">Executante (Técnico de Campo)</option><option value="contratada">Contratada (Empresa)</option></select><label>Vincular aos Contratos:</label><div class="box-check-contratos" id="listaCheckContratosFiscal"></div><div style="display:flex;gap:10px;margin-top:15px;"><button type="submit" class="btn-success btn-block">Salvar Integrante</button><button type="button" class="btn-secondary btn-block" onclick="fecharModal('modalFormUser')">Cancelar</button></div></form></div></div>
+
+    <!-- MODAL NOVA O.S. AVULSA -->
+    <div id="modalNovaOSAvulsa" class="modal-overlay hidden"><div class="modal-box" style="max-width: 600px;"><h3>Abrir Nova Ordem de Serviço</h3><div id="boxBuscaAvulsa" style="background:#f1f5f9;padding:15px;border-radius:6px;margin-bottom:15px;border:1px solid var(--border);"><label style="color:var(--primary-dark);">Busca por Tombo:</label><div style="display:flex;gap:10px;margin-bottom:15px;"><input type="text" id="buscaTombo" placeholder="Digite o tombo..." style="margin-bottom:0;"><button type="button" class="btn-primary" onclick="buscarEquipamentoPorTombo()">Buscar</button></div><hr style="border:0;border-top:1px dashed #cbd5e1;margin-bottom:15px;"><div class="row"><div class="col"><label>Comarca:</label><select id="selAvulsoComarca" onchange="popularAvulsoPredios()"></select></div><div class="col"><label>Prédio:</label><select id="selAvulsoPredio" onchange="popularAvulsoSalas()"></select></div></div><div class="row"><div class="col"><label>Sala:</label><select id="selAvulsoSala" onchange="popularAvulsoEqs()"></select></div><div class="col"><label>Equipamento:</label><select id="selAvulsoEq" required></select></div></div></div><div id="boxEqSelecionadoFixo" class="hidden" style="background:#e0f2fe;padding:15px;border-radius:6px;margin-bottom:15px;border:1px solid #7dd3fc;"><strong id="lblEqFixoNome" style="color:var(--primary-dark);font-size:15px;"></strong><br><span id="lblEqFixoLocal" style="color:#475569;font-size:13px;"></span></div><form onsubmit="enviarOSAvulsa(event)"><label>Relato do Defeito:</label><textarea id="osDescricaoAvulsa" rows="3" required placeholder="Descreva o problema..."></textarea><div style="display:flex;gap:10px;margin-top:10px;"><button type="submit" class="btn-success btn-block">Registrar e Autorizar O.S.</button><button type="button" class="btn-secondary btn-block" onclick="fecharModal('modalNovaOSAvulsa')">Cancelar</button></div></form></div></div>
+
+    
+<div id="modalNovaInstalacao" class="modal-overlay hidden"><div class="modal-box" style="max-width:760px"><h3>Nova O.S. de Instalação / Substituição</h3><form onsubmit="enviarNovaInstalacao(event)"><label>Modalidade:</label><select id="instTipo" onchange="ajustarModalInstalacao()"><option value="instalacao">Instalação nova</option><option value="substituicao">Substituição de equipamento</option></select><div id="instBoxContrato"><label>Contrato:</label><select id="instContrato"></select></div><div id="instBoxSub" class="hidden"><label>Equipamento a substituir:</label><select id="instEquipSub"></select></div><div class="row"><div class="col"><label>Marca:</label><input id="instMarca" type="text" required></div><div class="col"><label>Modelo / tipo:</label><select id="instModelo" required><option>HI WALL</option><option>PISO TETO</option><option>CASSETE</option><option>JANELEIRO</option><option>MULTI SPLIT</option><option>SELF</option><option>CORTINA DE AR</option><option>SPLITÃO</option><option>OUTRO</option></select></div><div class="col"><label>Capacidade:</label><input id="instCap" type="text"></div></div><div class="row"><div class="col"><label>Comarca:</label><select id="instComarca" required></select></div><div class="col"><label>Prédio:</label><input id="instPredio" type="text" required></div><div class="col"><label>Local:</label><input id="instSala" type="text" required></div></div><label>Tombo (pode ser informado na conclusão):</label><input id="instTombo" type="text"><label>Observação:</label><textarea id="instObs"></textarea><div style="display:flex;gap:10px"><button class="btn-success btn-block">Criar e autorizar O.S.</button><button type="button" class="btn-secondary btn-block" onclick="fecharModal('modalNovaInstalacao')">Cancelar</button></div></form></div></div>
+<div id="modalHistoricoEqOS" class="modal-overlay hidden"><div class="modal-box" style="max-width: 850px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3 style="margin:0;">Histórico do Equipamento</h3><button class="btn-danger btn-sm" onclick="fecharModal('modalHistoricoEqOS')">X</button></div>
+<h4 style="margin:10px 0 6px 0;color:var(--primary-dark);font-size:14px;">🛠️ Ordens de Serviço (Corretivas / Instalações)</h4>
+<div style="overflow-x:auto;max-height:200px;margin-bottom:15px;border:1px solid var(--border);border-radius:6px;"><table style="margin-top:0;"><thead><tr><th>O.S. / Data</th><th>Tipo / Descrição</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaHistoricoEqOS"></tbody></table></div>
+<h4 style="margin:10px 0 6px 0;color:var(--primary-dark);font-size:14px;">📅 Manutenções Preventivas (PMOC)</h4>
+<div style="overflow-x:auto;max-height:200px;border:1px solid var(--border);border-radius:6px;"><table style="margin-top:0;"><thead><tr><th>PMOC / Competência</th><th>Periodicidade</th><th>Medições</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaHistoricoEqPMOC"></tbody></table></div>
+</div></div>
+
+    <!-- MODAL TRATAR / VALIDAR O.S. PELO FISCAL -->
+    <div id="modalTratarOS" class="modal-overlay hidden"><div class="modal-box"><div style="display:flex;justify-content:space-between;align-items:center;"><div><h3 style="margin:0;">Fiscalização da O.S. <span id="detalheOsId"></span></h3><span id="detalheOsBadge" class="badge"></span></div><button class="btn-info btn-sm" id="btnImprimirModal" style="padding:8px 12px;">🖨️ PDF</button></div><div style="background:#f8fafc;border:1px solid var(--border);padding:10px;border-radius:6px;margin-top:15px;font-size:13px;"><strong>Tipo:</strong> <span id="detalheOsTipo"></span><br><strong>Equipamento:</strong> <span id="detalheOsEquip"></span><br><strong>Local:</strong> <span id="detalheOsLocal"></span><br><strong>Contrato:</strong> <span id="detalheOsContrato" style="font-weight:bold;color:var(--primary-dark);"></span><br><strong>Técnico Responsável:</strong> <span id="detalheOsExecutante" style="color:var(--primary-dark);font-weight:bold;"></span><br><strong>Defeito Inicial:</strong> <span id="detalheOsDefeito" style="color:var(--danger);"></span><div id="boxLinkAnexo" class="hidden" style="margin-top:10px;"></div></div><div id="boxAcaoOS" style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border);"><h4 id="tituloAcaoFiscal">Decisão do Fiscal</h4><form onsubmit="salvarTratamentoOS(event)"><input type="hidden" id="tratarOsId"><label>Ação a Tomar:</label><select id="tratarOsStatus" required onchange="ajustarExigenciaObs()"></select><div id="boxTomboFiscal" class="hidden"><label>Tombo do novo equipamento:</label><input type="text" id="tomboFiscal"></div><label id="lblObsFiscal">Observação / Justificativa:</label><textarea id="tratarOsObs" rows="3" placeholder="Insira informações adicionais..."></textarea><button type="submit" class="btn-success btn-block" id="btnGravarDecisao">Confirmar Decisão</button></form></div><h4 style="margin-top:25px;">Histórico da O.S.</h4><div id="boxTimeline" class="timeline"></div><button class="btn-secondary btn-block" style="margin-top:20px;" onclick="fecharModal('modalTratarOS')">Fechar Detalhes</button></div></div>
+
+    <!-- MODAIS DO PMOC (MANUTENÇÃO PREVENTIVA) -->
+        <!-- 2. MODAL PREVENTIVA AVULSA -->
+    <div id="modalPreventivaAvulsa" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 620px;">
+            <h3>Abrir Preventiva Avulsa</h3>
+            <p style="font-size:13px;color:#64748b;margin-bottom:15px;">Programa uma preventiva individual fora do lote para um equipamento específico.</p>
+            <div id="boxBuscaAvulsaPMOC" style="background:#f1f5f9;padding:15px;border-radius:6px;margin-bottom:15px;border:1px solid var(--border);">
+                <label style="color:var(--primary-dark);">Busca por Tombo:</label>
+                <div style="display:flex;gap:10px;margin-bottom:12px;">
+                    <input type="text" id="buscaTomboPMOC" placeholder="Digite o tombo..." style="margin-bottom:0;">
+                    <button type="button" class="btn-primary" onclick="buscarEquipamentoPorTomboPMOC()">Buscar</button>
+                </div>
+                <div class="row">
+                    <div class="col"><label>Comarca:</label><select id="selPmocComarca" onchange="popularPmocPredios()"></select></div>
+                    <div class="col"><label>Prédio:</label><select id="selPmocPredio" onchange="popularPmocSalas()"></select></div>
+                </div>
+                <div class="row">
+                    <div class="col"><label>Sala:</label><select id="selPmocSala" onchange="popularPmocEqs()"></select></div>
+                    <div class="col"><label>Equipamento:</label><select id="selPmocEq" required></select></div>
+                </div>
+            </div>
+            <form onsubmit="enviarPreventivaAvulsa(event)">
+                <div class="row">
+                    <div class="col">
+                        <label>Mês:</label>
+                        <select id="avulsaPmocMes">
+                            <option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label>Ano:</label>
+                        <input type="number" id="avulsaPmocAno" value="2026" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;margin-bottom:15px;background:#f8fafc;">
+                    </div>
+                    <div class="col">
+                        <label>Periodicidade:</label>
+                        <select id="avulsaPmocPeriodicidade">
+                            <option value="M">Mensal (M)</option>
+                            <option value="T">Trimestral (T)</option>
+                            <option value="S">Semestral (S)</option>
+                            <option value="A">Anual (A)</option>
+                        </select>
+                    </div>
+                </div>
+                <label>Observação:</label>
+                <textarea id="avulsaPmocObs" rows="2" placeholder="Observações opcionais..."></textarea>
+                <div style="display:flex;gap:10px;margin-top:10px;">
+                    <button type="submit" class="btn-success btn-block">Registrar Preventiva</button>
+                    <button type="button" class="btn-secondary btn-block" onclick="fecharModal('modalPreventivaAvulsa')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. MODAL FISCALIZAÇÃO / VALIDAÇÃO DE PREVENTIVA PMOC -->
+    <div id="modalValidarPMOC" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 780px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="margin:0;">Fiscalização da Preventiva <span id="valPmocId"></span></h3>
+                    <div style="margin-top:4px;"><span id="valPmocBadge"></span> <span id="valPmocPeriodBadge"></span></div>
+                </div>
+                <button class="btn-info btn-sm" id="btnImprimirPMOCModal" style="padding:8px 12px;">🖨️ PDF PMOC</button>
+            </div>
+
+            <div style="background:#f8fafc;border:1px solid var(--border);padding:12px;border-radius:6px;margin-top:15px;font-size:13px;">
+                <div class="row">
+                    <div class="col"><strong>Equipamento:</strong> <span id="valPmocEquip"></span></div>
+                    <div class="col"><strong>Tombo:</strong> <span id="valPmocTombo" style="font-weight:bold;color:var(--primary-dark);"></span></div>
+                </div>
+                <div class="row" style="margin-top:6px;">
+                    <div class="col"><strong>Local:</strong> <span id="valPmocLocal"></span></div>
+                    <div class="col"><strong>Contrato:</strong> <span id="valPmocContrato" style="font-weight:bold;"></span></div>
+                </div>
+                <div class="row" style="margin-top:6px;">
+                    <div class="col"><strong>Técnico / Responsável:</strong> <span id="valPmocTecnico" style="color:var(--primary-dark);font-weight:bold;"></span></div>
+                    <div class="col"><strong>Competência:</strong> <span id="valPmocCompetencia" style="font-weight:bold;"></span></div>
+                </div>
+                <hr style="border:0;border-top:1px solid var(--border);margin:10px 0;">
+                <div class="row">
+                    <div class="col"><strong>Tensão Medida:</strong> <span id="valPmocTensao" style="font-weight:bold;color:#0284c7;">-</span></div>
+                    <div class="col"><strong>Corrente Medida:</strong> <span id="valPmocCorrente" style="font-weight:bold;color:#0284c7;">-</span></div>
+                    <div class="col"><strong>Insuflamento:</strong> <span id="valPmocTempIns">-</span></div>
+                    <div class="col"><strong>Retorno:</strong> <span id="valPmocTempRet">-</span></div>
+                </div>
+                <div id="boxValLinkAnexo" class="hidden" style="margin-top:10px;"></div>
+            </div>
+
+            <h4 style="margin-top:15px;margin-bottom:8px;">Checklist PMOC Realizado (Itens Oficiais TJCE)</h4>
+            <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;">
+                <table style="margin-top:0;font-size:11px;">
+                    <thead>
+                        <tr><th>Item</th><th>Atividade</th><th>Situação</th><th>Obs</th></tr>
+                    </thead>
+                    <tbody id="valPmocTabelaChecklist"></tbody>
+                </table>
+            </div>
+
+            <div id="boxAcaoPMOCFiscal" style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border);">
+                <h4 id="tituloAcaoPMOC">Decisão da Fiscalização</h4>
+                <form onsubmit="salvarDecisaoPMOC(event)">
+                    <input type="hidden" id="tratarPmocId">
+                    <label>Ação a Tomar:</label>
+                    <select id="tratarPmocStatus" required onchange="ajustarExigenciaObsPMOC()">
+                        <option value="reprovada">❌ Alterar Status para REPROVADO (Falha identificada — avaliação de pagamento)</option>
+                    </select>
+                    <label id="lblObsPMOC">Observação / Justificativa:</label>
+                    <textarea id="tratarPmocObs" rows="2" placeholder="Insira informações da fiscalização..."></textarea>
+                    <button type="submit" class="btn-success btn-block" id="btnGravarDecisaoPMOC">Confirmar Decisão</button>
+                </form>
+            </div>
+
+            <h4 style="margin-top:20px;">Histórico da Preventiva</h4>
+            <div id="boxTimelinePMOC" class="timeline"></div>
+            <button class="btn-secondary btn-block" style="margin-top:15px;" onclick="fecharModal('modalValidarPMOC')">Fechar Detalhes</button>
+        </div>
+    </div>
+
+<script src="config.js"></script>
+    <script src="shared.js?v=5.8"></script>
+<script>
+async function abrirNovaInstalacao(){if(!contratosDoFiscal.length)await carregarListaContratosFiscal();if(!equipamentosCache.length)equipamentosCache=await(await apiFetch('/api/equipamentos')).json();document.getElementById('instContrato').innerHTML=contratosDoFiscal.map(c=>`<option value="${c.id}">${esc(c.numero_contrato)} - ${esc(c.nome_empresa)}</option>`).join('');document.getElementById('instEquipSub').innerHTML=equipamentosCache.filter(e=>e.ativo===1).map(e=>`<option value="${e.id}">${esc(e.marca||'')} ${esc(e.tipo_equipamento)} - ${esc(e.comarca)} / ${esc(e.sala)} - ${esc(e.tombo)}</option>`).join('');document.getElementById('instComarca').innerHTML=MUNICIPIOS_CE.map(m=>`<option>${m}</option>`).join('');ajustarModalInstalacao();document.getElementById('modalNovaInstalacao').classList.remove('hidden');}
+function ajustarModalInstalacao(){const sub=document.getElementById('instTipo').value==='substituicao';document.getElementById('instBoxSub').classList.toggle('hidden',!sub);document.getElementById('instBoxContrato').classList.toggle('hidden',sub);}
+async function enviarNovaInstalacao(e){e.preventDefault();const sub=document.getElementById('instTipo').value==='substituicao';const p={substituicao:sub,contrato_id:Number(document.getElementById('instContrato').value),equipamento_substituido_id:sub?Number(document.getElementById('instEquipSub').value):null,marca:document.getElementById('instMarca').value,tipo_equipamento:document.getElementById('instModelo').value,capacidade:document.getElementById('instCap').value,comarca:document.getElementById('instComarca').value,predio:document.getElementById('instPredio').value,sala:document.getElementById('instSala').value,tombo:document.getElementById('instTombo').value,observacao:document.getElementById('instObs').value};const r=await apiFetch('/api/os/instalacao',{method:'POST',body:JSON.stringify(p)});const d=await r.json();if(!r.ok)return alert(d.erro||'Falha ao criar O.S.');alert('O.S. criada e autorizada.');fecharModal('modalNovaInstalacao');mudarAba('geralOS');}
+</script>
+<script>
+    let equipamentosCache = []; let osCache = []; let usuariosCache = []; let contratosDoFiscal = [];
+    let eqSortCol = 'comarca'; let eqSortAsc = true; let eqDebounceTimeout = null;
+    let eqFiltros = { comarca:'', predio:'', sala:'', marca:'', tipo:'', cap:'', tombo:'', contrato:'', status:'' };
+    let osFiltros = { id:'', comarca:'', status:'', contrato:'', periodo:'' };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        const user = await inicializarCore('fiscal');
+        if (!user) return;
+
+        const s = document.getElementById('formEqComarca');
+        if (s) s.innerHTML = '<option value="">SELECIONE A COMARCA...</option>' + MUNICIPIOS_CE.map(m => `<option value="${m}">${m}</option>`).join('');
+        mudarAba(sessionStorage.getItem('os_aba_fiscal') || 'geralOS');
+    });
+
+    function mudarAba(abaId) {
+        sessionStorage.setItem('os_aba_fiscal', abaId);
+        document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+        let btn = document.getElementById(`tab${abaId.charAt(0).toUpperCase() + abaId.slice(1)}`);
+        if (btn) btn.classList.add('active');
+        const box = document.getElementById('conteudoAba');
+        if (abaId === 'admUsers') renderAdmUsers(box);
+        if (abaId === 'geralEqs') carregarEquipamentosServer(box); 
+        if (abaId === 'geralOS') carregarOSServer(box);
+        if (abaId === 'pmoc') carregarPMOCServer(box);
+    }
+
+    async function carregarListaContratosFiscal() {
+        contratosDoFiscal = await (await apiFetch('/api/contratos')).json();
+        
+        // 1. Dropdown para Equipamento (1:N)
+        const htmlSelect = '<option value="">Selecione o Contrato...</option>' + 
+            contratosDoFiscal.map(c => `<option value="${c.id}">${esc(c.numero_contrato)} - ${esc(c.nome_empresa)}</option>`).join('');
+        const sEq = document.getElementById('formEqContrato');
+        if (sEq) sEq.innerHTML = htmlSelect;
+
+        // 2. Checkboxes para Usuário/Equipe (N:N)
+        const htmlChecks = contratosDoFiscal.map(c => `
+            <label class="check-item">
+                <input type="checkbox" name="chkContratoFiscalUser" value="${c.id}">
+                <span><strong>${esc(c.numero_contrato)}</strong> - ${esc(c.nome_empresa)}</span>
+            </label>
+        `).join('') || '<span style="font-size:12px;color:#64748b;">Nenhum contrato ativo.</span>';
+        const boxChk = document.getElementById('listaCheckContratosFiscal');
+        if (boxChk) boxChk.innerHTML = htmlChecks;
+    }
+
+    // ====== USUÁRIOS / EQUIPE ======
+    async function renderAdmUsers(box) {
+        box.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:15px;"><h3>Minha Equipe nos Contratos</h3><button class="btn-success" onclick="abrirModalUser(null)">+ Novo Integrante</button></div><div id="tabelaUsers">Carregando...</div>`;
+        usuariosCache = await (await apiFetch('/api/usuarios')).json();
+        let html = `<table><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Contratos Vinculados</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+        usuariosCache.forEach(u => {
+            const inativo = u.ativo === 0 ? 'class="inativo"' : '';
+            const status = u.ativo === 1 ? '<span style="color:var(--success);font-weight:bold;">Ativo</span>' : '<span style="color:var(--danger);font-weight:bold;">Inativo</span>';
+            let acoes = '';
+            if (u.id === usuarioLogado.id) { acoes = `<span style="color:#64748b;font-size:11px;">(Seu Perfil)</span>`; }
+            else {
+                let btnAtivar = u.ativo === 1 ? `<button class="btn-sm btn-danger" onclick="toggleAtivoUser(${u.id}, 0)">Inativar</button>` : `<button class="btn-sm btn-success" onclick="toggleAtivoUser(${u.id}, 1)">Ativar</button>`;
+                acoes = `<button class="btn-sm btn-secondary" onclick="abrirModalUser(${u.id})">Editar</button> ${btnAtivar}`;
+            }
+            html += `<tr ${inativo}><td>${esc(u.nome)}</td><td>${esc(u.login)}</td><td><span class="badge">${esc(u.perfil)}</span></td><td><strong>${esc(u.contrato_nome)||'-'}</strong></td><td>${status}</td><td style="white-space:nowrap;">${acoes}</td></tr>`;
+        });
+        document.getElementById('tabelaUsers').innerHTML = html + `</tbody></table>`;
+    }
+
+    async function abrirModalUser(id) {
+        if (id === usuarioLogado.id) { alert("Você não pode editar o seu próprio perfil."); return; }
+        document.getElementById('formUserId').value = ''; document.getElementById('formUserNome').value = ''; document.getElementById('formUserLogin').value = '';
+        await carregarListaContratosFiscal();
+        document.getElementById('modalFormUser').classList.remove('hidden');
+
+        document.querySelectorAll('input[name="chkContratoFiscalUser"]').forEach(ck => ck.checked = false);
+
+        if (id) {
+            const u = usuariosCache.find(x => x.id === id);
+            document.getElementById('tituloModalUser').textContent = 'Editar Integrante';
+            document.getElementById('formUserId').value = u.id; document.getElementById('formUserNome').value = u.nome; document.getElementById('formUserLogin').value = u.login; document.getElementById('formUserPerfil').value = u.perfil;
+            if (u.contratos_ids) {
+                const ids = String(u.contratos_ids).split(',').map(Number);
+                document.querySelectorAll('input[name="chkContratoFiscalUser"]').forEach(ck => {
+                    if (ids.includes(Number(ck.value))) ck.checked = true;
+                });
+            }
+        } else {
+            document.getElementById('tituloModalUser').textContent = 'Novo Integrante';
+        }
+    }
+
+    async function salvarUsuario(e) {
+        e.preventDefault(); const id = document.getElementById('formUserId').value;
+        const contratos_ids = Array.from(document.querySelectorAll('input[name="chkContratoFiscalUser"]:checked')).map(ck => parseInt(ck.value));
+
+        if (contratos_ids.length === 0) {
+            return alert("Selecione pelo menos um contrato para vincular ao integrante.");
+        }
+
+        const p = { 
+            nome: document.getElementById('formUserNome').value.trim().toUpperCase(), 
+            login: document.getElementById('formUserLogin').value.trim().toLowerCase(), 
+            perfil: document.getElementById('formUserPerfil').value, 
+            ativo: id ? usuariosCache.find(x => x.id == id).ativo : 1,
+            contratos_ids: contratos_ids
+        };
+
+        const res = await apiFetch(id ? `/api/usuarios/${id}` : '/api/usuarios', { method: id ? 'PUT' : 'POST', body: JSON.stringify(p) });
+        if (res.ok) { alert(id ? "Atualizado!" : "Integrante criado!"); fecharModal('modalFormUser'); mudarAba('admUsers'); } else alert((await res.json()).erro);
+    }
+
+    async function toggleAtivoUser(id, s) { if (s === 0 && !confirm("Inativar usuário da equipe?")) return; const u = usuariosCache.find(x => x.id == id); u.ativo = s; await apiFetch(`/api/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(u) }); mudarAba('admUsers'); }
+
+    // ====== EQUIPAMENTOS ======
+    async function carregarEquipamentosServer(box) {
+        box.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:15px;"><h3>Equipamentos dos meus Contratos</h3><button class="btn-success" onclick="abrirModalEquip(null)">+ Inclusão de Equipamento</button></div><div style="overflow-x:auto;"><table><thead id="headFiltrosEq"></thead><tbody id="tabelaBoxEq"><tr><td colspan="9">Carregando...</td></tr></tbody></table></div><div id="totalEqs" style="font-size:12px;color:#64748b;margin-top:10px;"></div>`;
+        equipamentosCache = await (await apiFetch('/api/equipamentos')).json();
+        renderizarCabecalhoEq(); desenharTabelaEquipamentos();
+    }
+
+    function renderizarCabecalhoEq() {
+        const iconSort = eqSortAsc ? ' ▴' : ' ▾'; const col = (n, c) => `<th onclick="setEqSort('${c}')">${n}${eqSortCol === c ? iconSort : ''}</th>`;
+        document.getElementById('headFiltrosEq').innerHTML = `<tr>${col('Comarca','comarca')}${col('Prédio','predio')}${col('Local','sala')}${col('Marca','marca')}${col('Equipamento','tipo_equipamento')}${col('Cap','capacidade')}${col('Tombo','tombo')}${col('Contrato','contrato_nome')}${col('Status','status')}<th>Ações</th></tr>
+            <tr class="filter-row">
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('comarca', this.value)" value="${eqFiltros.comarca}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('predio', this.value)" value="${eqFiltros.predio}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('sala', this.value)" value="${eqFiltros.sala}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('marca', this.value)"></td><td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('tipo', this.value)" value="${eqFiltros.tipo}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('cap', this.value)" value="${eqFiltros.cap}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('tombo', this.value)" value="${eqFiltros.tombo}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('contrato', this.value)" value="${eqFiltros.contrato}"></td>
+                <td><input type="text" placeholder="ativo/inativo" oninput="debounceFiltroEq('status', this.value)" value="${eqFiltros.status}"></td>
+                <td><button class="btn-sm btn-secondary" onclick="limparFiltrosEq()" style="padding:6px;width:100%;">Limpar</button></td>
+            </tr>`;
+    }
+
+    function debounceFiltroEq(c, v) { clearTimeout(eqDebounceTimeout); eqDebounceTimeout = setTimeout(() => { eqFiltros[c] = v.toLowerCase(); desenharTabelaEquipamentos(); }, 250); }
+    function limparFiltrosEq() { eqFiltros = { comarca:'', predio:'', sala:'', marca:'', tipo:'', cap:'', tombo:'', contrato:'', status:'' }; renderizarCabecalhoEq(); desenharTabelaEquipamentos(); }
+    function setEqSort(c) { if (eqSortCol === c) eqSortAsc = !eqSortAsc; else { eqSortCol = c; eqSortAsc = true; } renderizarCabecalhoEq(); desenharTabelaEquipamentos(); }
+
+    function desenharTabelaEquipamentos() {
+        const tbody = document.getElementById('tabelaBoxEq');
+        let filtrados = equipamentosCache.filter(eq => {
+            if (eqFiltros.comarca && !(eq.comarca||'').toLowerCase().includes(eqFiltros.comarca)) return false;
+            if (eqFiltros.predio && !(eq.predio||'').toLowerCase().includes(eqFiltros.predio)) return false;
+            if (eqFiltros.sala && !(eq.sala||'').toLowerCase().includes(eqFiltros.sala)) return false;
+            if (eqFiltros.marca && !(eq.marca||'').toLowerCase().includes(eqFiltros.marca)) return false;
+            if (eqFiltros.tipo && !(eq.tipo_equipamento||'').toLowerCase().includes(eqFiltros.tipo)) return false;
+            if (eqFiltros.cap && !(eq.capacidade||'').toLowerCase().includes(eqFiltros.cap)) return false;
+            if (eqFiltros.tombo && !(eq.tombo||'').toLowerCase().includes(eqFiltros.tombo)) return false;
+            if (eqFiltros.contrato && !(eq.contrato_nome||'').toLowerCase().includes(eqFiltros.contrato)) return false;
+            if (eqFiltros.status && !(eq.ativo === 1 ? 'ativo' : 'inativo').includes(eqFiltros.status)) return false;
+            return true;
+        });
+        filtrados.sort((a, b) => {
+            let valA = (a[eqSortCol] || '').toString().toLowerCase(); let valB = (b[eqSortCol] || '').toString().toLowerCase();
+            if (valA < valB) return eqSortAsc ? -1 : 1; if (valA > valB) return eqSortAsc ? 1 : -1; return 0;
+        });
+
+        let html = '';
+        filtrados.forEach(eq => {
+            const rowClass = eq.ativo === 0 ? 'inativo' : (eq.tem_os_ativa > 0 ? 'row-os-ativa' : '');
+            const statusLabel = eq.ativo === 1 ? '<span style="color:var(--success);font-weight:bold;">Ativo</span>' : '<span style="color:var(--danger);font-weight:bold;">Inativo</span>';
+            const btnInativar = eq.ativo === 1 
+                ? `<button class="btn-sm btn-danger" onclick="toggleAtivoEq(${eq.id}, 0)" title="Retira do plano de manutenção e bloqueia novas OSs">Inativar</button>`
+                : `<button class="btn-sm" style="background:#10b981;color:#fff;" onclick="toggleAtivoEq(${eq.id}, 1)" title="Reativar no plano de manutenção">Reativar</button>`;
+
+            const acoes = `
+                <button class="btn-sm btn-warning" onclick="abrirHistoricoCorretivasEq(${eq.id})" title="Histórico de O.S. Corretivas e Abertura de O.S.">Corretivas</button>
+                <button class="btn-sm btn-primary" onclick="abrirHistoricoPreventivasEq(${eq.id})" title="Histórico de Preventivas PMOC">Preventivas</button>
+                <button class="btn-sm btn-secondary" onclick="abrirModalEquip(${eq.id})" title="Editar dados do equipamento">Editar</button>
+                ${btnInativar}
+            `;
+            html += `<tr class="${rowClass}"><td>${esc(eq.comarca)}</td><td>${esc(eq.predio)}</td><td>${esc(eq.sala)}</td><td>${esc(eq.marca||'-')}</td><td>${esc(eq.tipo_equipamento)}</td><td>${esc(eq.capacidade||'-')}</td><td>${eq.tombo === 'S/T' ? '<span class="badge" style="background:#e2e8f0;color:#64748b;">S/T</span>' : esc(eq.tombo)}</td><td><strong>${esc(eq.contrato_nome)||'-'}</strong></td><td>${statusLabel}</td><td style="white-space:nowrap;">${acoes}</td></tr>`;
+        });
+        tbody.innerHTML = html; document.getElementById('totalEqs').textContent = `Total listado: ${filtrados.length} equipamento(s).`;
+    }
+
+    async function abrirModalEquip(id) {
+        document.getElementById('formEqId').value = ''; document.getElementById('formEqPredio').value = ''; document.getElementById('formEqSala').value = ''; document.getElementById('formEqMarca').value = ''; document.getElementById('formEqTombo').value = '';
+        await carregarListaContratosFiscal();
+        document.getElementById('modalFormEquip').classList.remove('hidden');
+        if (id) {
+            const eq = equipamentosCache.find(e => e.id === id);
+            document.getElementById('tituloModalEquip').textContent = 'Editar Equipamento';
+            document.getElementById('formEqId').value = eq.id; document.getElementById('formEqComarca').value = eq.comarca; document.getElementById('formEqPredio').value = eq.predio; document.getElementById('formEqSala').value = eq.sala; document.getElementById('formEqTipo').value = eq.tipo_equipamento; document.getElementById('formEqCap').value = eq.capacidade || ''; document.getElementById('formEqMarca').value = eq.marca || ''; document.getElementById('formEqTombo').value = eq.tombo === 'S/T' ? '' : eq.tombo;
+            document.getElementById('formEqContrato').value = eq.contrato_id || '';
+        } else {
+            document.getElementById('tituloModalEquip').textContent = 'Inclusão de Equipamento no Contrato';
+        }
+    }
+
+    async function salvarEquipamento(e) {
+        e.preventDefault(); const id = document.getElementById('formEqId').value;
+        const cid = document.getElementById('formEqContrato').value;
+        if (!cid) return alert("Selecione a qual contrato este equipamento pertence.");
+
+        const payload = { 
+            comarca: document.getElementById('formEqComarca').value.trim().toUpperCase(), 
+            predio: document.getElementById('formEqPredio').value.trim().toUpperCase(), 
+            sala: document.getElementById('formEqSala').value.trim().toUpperCase(), 
+            tipo_equipamento: document.getElementById('formEqTipo').value.trim().toUpperCase(), 
+            capacidade: document.getElementById('formEqCap').value.trim().toUpperCase(), 
+            marca: document.getElementById('formEqMarca').value.trim().toUpperCase(), 
+            tombo: document.getElementById('formEqTombo').value.trim().toUpperCase() || 'S/T', 
+            contrato_id: parseInt(cid),
+            ativo: id ? equipamentosCache.find(e => e.id == id).ativo : 1 
+        };
+
+        const res = await apiFetch(id ? `/api/equipamentos/${id}` : '/api/equipamentos', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+        if (res.ok) {
+            fecharModal('modalFormEquip'); mudarAba('geralEqs');
+        } else {
+            alert((await res.json()).erro || "Erro ao salvar equipamento.");
+        }
+    }
+
+    async function toggleAtivoEq(id, s) {
+        const acaoTexto = s === 0 ? "inativar" : "reativar";
+        const aviso = s === 0 
+            ? "Tem certeza que deseja inativar este equipamento?\n\n• Ele será retirado imediatamente do plano de manutenção preventiva.\n• Não será possível abrir novas Ordens de Serviço para ele.\n• Todo o histórico passado será preservado."
+            : "Deseja reativar este equipamento?\n\n• Ele retornará imediatamente ao plano de manutenção preventiva na janela móvel.\n• Voltará a permitir abertura de novas Ordens de Serviço.\n• Todo o histórico anterior permanece preservado.";
+        if (!confirm(aviso)) return;
+        const eq = equipamentosCache.find(e => e.id == id);
+        if (!eq) return;
+        const dados = { ...eq, ativo: s };
+        const res = await apiFetch(`/api/equipamentos/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.erro || `Erro ao ${acaoTexto} equipamento.`);
+            return;
+        }
+        alert(`Equipamento ${s === 1 ? 'reativado' : 'inativado'} com sucesso!`);
+        mudarAba('geralEqs');
+    }
+
+    // ====== ORDENS DE SERVIÇO COM MÉTRICAS E FILTROS ======
+    async function carregarOSServer(box) {
+        box.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
+                <h3 style="margin:0;">Fiscalização de Ordens de Serviço</h3>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <label style="margin:0;font-size:12px;color:#64748b;">Período:</label>
+                    <select id="selOsPeriodo" onchange="setOsPeriodo(this.value)" style="margin:0;padding:6px;width:auto;font-size:12px;background:#fff;"></select>
+                    <button onclick="carregarOSServer(document.getElementById('conteudoAba'))">Atualizar</button>
+                </div>
+            </div>
+
+            <!-- CARDS DE MÉTRICAS -->
+            <div class="dash-grid" id="boxMetricasFiscal">
+                <div class="dash-card"><div style="color:#64748b;font-size:11px;">Total O.S.</div><div class="dash-value" id="cardMetricaTotal" style="color:var(--primary-dark);">0</div></div>
+                <div class="dash-card"><div style="color:#64748b;font-size:11px;">Aguardando Início</div><div class="dash-value" id="cardMetricaAprovadas" style="color:var(--info);">0</div></div>
+                <div class="dash-card"><div style="color:#64748b;font-size:11px;">Em Execução</div><div class="dash-value" id="cardMetricaExecucao" style="color:var(--warning);">0</div></div>
+                <div class="dash-card"><div style="color:#64748b;font-size:11px;">Aguardando Peça</div><div class="dash-value" id="cardMetricaPeca" style="color:#8b5cf6;">0</div></div>
+                <div class="dash-card" style="border:2px solid #4f46e5;background:#eef2ff;"><div style="color:#4338ca;font-size:11px;font-weight:bold;">Aguardando Validação</div><div class="dash-value" id="cardMetricaAnalise" style="color:#4f46e5;">0</div></div>
+                <div class="dash-card"><div style="color:#64748b;font-size:11px;">Concluídas</div><div class="dash-value" id="cardMetricaConcluidas" style="color:var(--success);">0</div></div>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead id="headFiltrosOS">
+                        <tr><th>ID / Data</th><th>Local</th><th>Equipamento / Defeito</th><th>Contrato</th><th>Status</th><th>Ações</th></tr>
+                        <tr class="filter-row">
+                            <td><input type="text" placeholder="Buscar ID..." oninput="setOsFiltro('id', this.value)"></td>
+                            <td><input type="text" placeholder="Buscar Comarca..." oninput="setOsFiltro('comarca', this.value)"></td>
+                            <td></td>
+                            <td><input type="text" placeholder="Buscar Contrato..." oninput="setOsFiltro('contrato', this.value)"></td>
+                            <td><input type="text" placeholder="Buscar Status..." oninput="setOsFiltro('status', this.value)"></td>
+                            <td><button class="btn-sm btn-secondary" onclick="limparFiltrosOS()" style="padding:6px;width:100%;">Limpar</button></td>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBoxOS"><tr><td colspan="6">Carregando...</td></tr></tbody>
+                </table>
+            </div>`;
+
+        osCache = await (await apiFetch('/api/os')).json();
+        popularDropdownPeriodo();
+        desenharTabelaOS();
+    }
+
+    function popularDropdownPeriodo() {
+        const sel = document.getElementById('selOsPeriodo');
+        if (!sel) return;
+        const mesesSet = new Set();
+        osCache.forEach(os => {
+            const d = new Date(os.data_abertura);
+            const chave = `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            mesesSet.add(chave);
+        });
+        const meses = Array.from(mesesSet).sort().reverse();
+        sel.innerHTML = '<option value="">Todos os Períodos</option>' + meses.map(m => `<option value="${m}" ${osFiltros.periodo === m ? 'selected' : ''}>${m}</option>`).join('');
+    }
+
+    function setOsPeriodo(val) { osFiltros.periodo = val; desenharTabelaOS(); }
+    function limparFiltrosOS() { osFiltros = { id:'', comarca:'', status:'', contrato:'', periodo:'' }; document.querySelectorAll('#headFiltrosOS input').forEach(i=>i.value=''); const sP = document.getElementById('selOsPeriodo'); if(sP) sP.value=''; desenharTabelaOS(); }
+    function setOsFiltro(c, v) { osFiltros[c] = v.toLowerCase(); desenharTabelaOS(); }
+    
+    function desenharTabelaOS() {
+        const tbody = document.getElementById('tabelaBoxOS');
+        let filtrados = osCache.filter(os => {
+            const codOs = formatarNumOS(os.id, os.data_abertura);
+            if (osFiltros.id && !os.id.toString().includes(osFiltros.id) && !codOs.toLowerCase().includes(osFiltros.id)) return false;
+            if (osFiltros.comarca && !(os.comarca||'').toLowerCase().includes(osFiltros.comarca)) return false;
+            if (osFiltros.contrato && !(os.contrato_nome||'').toLowerCase().includes(osFiltros.contrato)) return false;
+            if (osFiltros.status && !(os.status||'').toLowerCase().includes(osFiltros.status)) return false;
+            if (osFiltros.periodo) {
+                const d = new Date(os.data_abertura);
+                const chave = `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                if (chave !== osFiltros.periodo) return false;
+            }
+            return true;
+        });
+
+        let total = filtrados.length, aprov = 0, exec = 0, peca = 0, analise = 0, conc = 0;
+        filtrados.forEach(os => {
+            if (os.status === 'aprovada' || os.status === 'aberta') aprov++;
+            else if (os.status === 'em_execucao') exec++;
+            else if (os.status === 'aguardando_peca') peca++;
+            else if (os.status === 'em_analise') analise++;
+            else if (os.status === 'concluida') conc++;
+        });
+
+        document.getElementById('cardMetricaTotal').textContent = total;
+        document.getElementById('cardMetricaAprovadas').textContent = aprov;
+        document.getElementById('cardMetricaExecucao').textContent = exec;
+        document.getElementById('cardMetricaPeca').textContent = peca;
+        document.getElementById('cardMetricaAnalise').textContent = analise;
+        document.getElementById('cardMetricaConcluidas').textContent = conc;
+
+        let html = '';
+        filtrados.forEach(os => {
+            let cor = '#3b82f6'; 
+            let rowClasse = '';
+            let labelStatus = os.status.replace('_', ' ').toUpperCase();
+
+            if (os.status === 'concluida') cor = '#10b981';
+            else if (os.status === 'cancelada') cor = '#ef4444';
+            else if (os.status === 'em_execucao') cor = '#f59e0b';
+            else if (os.status === 'aguardando_peca') cor = '#8b5cf6';
+            else if (os.status === 'aprovada') cor = '#0284c7';
+            else if (os.status === 'em_analise') { 
+                cor = '#4f46e5'; 
+                rowClasse = 'row-em-analise'; 
+                labelStatus = 'VALIDAÇÃO FISCAL';
+            }
+
+            let btnAnexo = os.arquivo_conclusao ? `<a href="#" onclick="event.preventDefault(); abrirAnexo('${esc(os.arquivo_conclusao)}'); return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:4px;">📎 Anexo</a>` : '';
+            let textoBotaoTratar = os.status === 'em_analise' ? '⚖️ Validar O.S.' : 'Fiscalizar / Detalhes';
+
+            html += `<tr class="${rowClasse}">
+                <td><strong>${formatarNumOS(os.id, os.data_abertura)}</strong><br><small>${dataFormatada(os.data_abertura)}</small></td>
+                <td><strong>${esc(os.comarca)}</strong><br><small>${esc(os.predio)} (${esc(os.sala)})</small></td>
+                <td style="max-width:240px;"><strong>${seloTipoOS(os.tipo_os)} ${os.marca ? esc(os.marca)+' ' : ''}${esc(os.tipo_equipamento)} ${esc(os.capacidade||'')}</strong><br><small style="color:#64748b;">${esc(os.descricao_falha)}</small></td>
+                <td><strong>${esc(os.contrato_nome || '-')}</strong></td>
+                <td><span class="badge" style="background:${cor};color:white;">${labelStatus}</span></td>
+                <td><button class="btn-sm ${os.status === 'em_analise' ? 'btn-warning' : 'btn-secondary'}" onclick="abrirDetalhesOS(${os.id})">${textoBotaoTratar}</button> <button class="btn-sm btn-info" onclick="imprimirOSPdf(${os.id})">🖨️ PDF</button> ${btnAnexo}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:15px;color:#64748b;">Nenhuma O.S. encontrada para o filtro.</td></tr>';
+    }
+
+    // ====== ABERTURA DE O.S. ======
+    async function abrirNovaOSAvulsa() {
+        document.getElementById('buscaTombo').value = ''; document.getElementById('osDescricaoAvulsa').value = '';
+        document.getElementById('boxBuscaAvulsa').classList.remove('hidden'); document.getElementById('boxEqSelecionadoFixo').classList.add('hidden');
+        if (equipamentosCache.length === 0) equipamentosCache = await (await apiFetch('/api/equipamentos')).json();
+        const comarcas = [...new Set(equipamentosCache.filter(e => e.ativo === 1).map(e => e.comarca))].sort();
+        document.getElementById('selAvulsoComarca').innerHTML = '<option value="">1. Selecione a Comarca...</option>' + comarcas.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+        document.getElementById('selAvulsoPredio').innerHTML = '<option value="">Aguardando comarca...</option>'; document.getElementById('selAvulsoSala').innerHTML = '<option value="">Aguardando prédio...</option>'; document.getElementById('selAvulsoEq').innerHTML = '<option value="">Aguardando sala...</option>';
+        document.getElementById('modalNovaOSAvulsa').classList.remove('hidden');
+    }
+    function abrirModalNovaOSAvulsaPeloEq(id, nome, local) {
+        document.getElementById('osDescricaoAvulsa').value = '';
+        document.getElementById('boxBuscaAvulsa').classList.add('hidden'); document.getElementById('boxEqSelecionadoFixo').classList.remove('hidden');
+        document.getElementById('lblEqFixoNome').textContent = nome; document.getElementById('lblEqFixoLocal').textContent = local;
+        document.getElementById('selAvulsoEq').innerHTML = `<option value="${id}">Selecionado</option>`; document.getElementById('selAvulsoEq').value = id;
+        document.getElementById('modalNovaOSAvulsa').classList.remove('hidden');
+    }
+    function popularAvulsoPredios() { const com = document.getElementById('selAvulsoComarca').value; const predios = [...new Set(equipamentosCache.filter(e => e.ativo === 1 && e.comarca === com).map(e => e.predio))].sort(); document.getElementById('selAvulsoPredio').innerHTML = '<option value="">2. Selecione o Prédio...</option>' + predios.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join(''); }
+    function popularAvulsoSalas() { const com = document.getElementById('selAvulsoComarca').value; const pre = document.getElementById('selAvulsoPredio').value; const salas = [...new Set(equipamentosCache.filter(e => e.ativo === 1 && e.comarca === com && e.predio === pre).map(e => e.sala))].sort(); document.getElementById('selAvulsoSala').innerHTML = '<option value="">3. Selecione a Sala...</option>' + salas.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join(''); }
+    function popularAvulsoEqs() { const com = document.getElementById('selAvulsoComarca').value; const pre = document.getElementById('selAvulsoPredio').value; const sal = document.getElementById('selAvulsoSala').value; const eqs = equipamentosCache.filter(e => e.ativo === 1 && e.comarca === com && e.predio === pre && e.sala === sal); document.getElementById('selAvulsoEq').innerHTML = '<option value="">4. Selecione o Equipamento...</option>' + eqs.map(e => `<option value="${e.id}">${esc(e.tipo_equipamento)} ${esc(e.capacidade||'')} (Tombo: ${esc(e.tombo)})</option>`).join(''); }
+    function buscarEquipamentoPorTombo() { const tombo = document.getElementById('buscaTombo').value.trim().toUpperCase(); const eq = equipamentosCache.find(e => e.ativo === 1 && e.tombo === tombo && e.tombo !== 'S/T'); if (eq) { document.getElementById('selAvulsoComarca').innerHTML = `<option value="${esc(eq.comarca)}">${esc(eq.comarca)}</option>`; document.getElementById('selAvulsoPredio').innerHTML = `<option value="${esc(eq.predio)}">${esc(eq.predio)}</option>`; document.getElementById('selAvulsoSala').innerHTML = `<option value="${esc(eq.sala)}">${esc(eq.sala)}</option>`; document.getElementById('selAvulsoEq').innerHTML = `<option value="${eq.id}">${esc(eq.tipo_equipamento)} ${esc(eq.capacidade||'')} (Tombo: ${esc(eq.tombo)})</option>`; } else { alert("Tombo não encontrado."); } }
+    
+    async function enviarOSAvulsa(e) { 
+        e.preventDefault(); 
+        const eqId = document.getElementById('selAvulsoEq').value; 
+        if (!eqId) return alert("Selecione um equipamento."); 
+        const res = await apiFetch('/api/os', { method: 'POST', body: JSON.stringify({ equipamento_id: eqId, descricao_falha: document.getElementById('osDescricaoAvulsa').value.trim().toUpperCase() }) }); 
+        if (res.ok) {
+            alert("O.S. Aberta e Aprovada com sucesso! Já está visível no painel da contratada correspondente.");
+            fecharModal('modalNovaOSAvulsa'); 
+            mudarAba('geralOS'); 
+        } else {
+            alert((await res.json()).erro || "Erro ao registrar O.S.");
+        }
+    }
+
+    async function abrirHistoricoEqOS(eq_id) {
+        document.getElementById('modalHistoricoEqOS').classList.remove('hidden');
+        const tbodyOS = document.getElementById('tabelaHistoricoEqOS');
+        const tbodyPMOC = document.getElementById('tabelaHistoricoEqPMOC');
+        tbodyOS.innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando histórico...</td></tr>';
+        tbodyPMOC.innerHTML = '<tr><td colspan="5" style="text-align:center;">Carregando histórico PMOC...</td></tr>';
+
+        try {
+            const chamados = await (await apiFetch(`/api/equipamentos/${eq_id}/os`)).json();
+            if (chamados.length === 0) { 
+                tbodyOS.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma O.S. para este equipamento.</td></tr>'; 
+            } else {
+                let html = '';
+                chamados.forEach(os => {
+                    let cor = '#3b82f6'; if (os.status==='concluida') cor='#10b981'; if (os.status==='cancelada') cor='#ef4444'; if (os.status==='em_execucao') cor='#f59e0b'; if (os.status==='aguardando_peca') cor='#8b5cf6'; if (os.status==='aprovada') cor='#0284c7'; if (os.status==='em_analise') cor='#4f46e5';
+                    let btnAnexo = os.arquivo_conclusao ? `<a href="#" onclick="event.preventDefault(); abrirAnexo('${esc(os.arquivo_conclusao)}'); return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:4px;">📎 Anexo</a>` : '';
+                    html += `<tr><td><strong>${formatarNumOS(os.id, os.data_abertura)}</strong><br><small>${dataFormatada(os.data_abertura)}</small></td><td>${seloTipoOS(os.tipo_os)}<br><small style="color:#64748b;">${esc(os.descricao_falha)}</small></td><td><span class="badge" style="background:${cor};color:white;">${os.status.replace('_', ' ').toUpperCase()}</span></td><td><button class="btn-sm btn-secondary" onclick="fecharModal('modalHistoricoEqOS'); abrirDetalhesOS(${os.id});">Detalhes</button> <button class="btn-sm btn-info" onclick="imprimirOSPdf(${os.id})">🖨️ PDF</button> ${btnAnexo}</td></tr>`;
+                });
+                tbodyOS.innerHTML = html;
+            }
+        } catch (err) { 
+            tbodyOS.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Erro ao buscar O.S.</td></tr>'; 
+        }
+
+        try {
+            const preventivas = await (await apiFetch(`/api/equipamentos/${eq_id}/pmoc`)).json();
+            if (preventivas.length === 0) {
+                tbodyPMOC.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhuma preventiva PMOC para este equipamento.</td></tr>';
+            } else {
+                let htmlP = '';
+                preventivas.forEach(p => {
+                    const cod = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+                    const btnFolha = p.arquivo_folha_assinada ? `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(p.arquivo_folha_assinada)}');return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:3px;">📎 Folha</a>` : '';
+                    const med = (p.tensao_medida || p.corrente_medida) ? `${esc(p.tensao_medida||'-')} / ${esc(p.corrente_medida||'-')}` : '-';
+                    htmlP += `<tr>
+                        <td><strong>${cod}</strong><br><small>${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia}</small></td>
+                        <td>${seloPeriodicidade(p.periodicidade)}</td>
+                        <td><small>${med}</small></td>
+                        <td>${seloStatusPMOC(p.status)}</td>
+                        <td><button class="btn-sm btn-secondary" onclick="fecharModal('modalHistoricoEqOS'); abrirValidarPMOC(${p.id});">Detalhes</button> <button class="btn-sm btn-info" onclick="imprimirPMOCPdf(${p.id}, ${p.mes_competencia}, ${p.ano_competencia})">🖨️ PDF</button> ${btnFolha}</td>
+                    </tr>`;
+                });
+                tbodyPMOC.innerHTML = htmlP;
+            }
+        } catch (err) {
+            tbodyPMOC.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Erro ao buscar PMOC.</td></tr>';
+        }
+    }
+
+    // ====== TRATAMENTO E VALIDAÇÃO FISCAL ======
+    async function abrirDetalhesOS(os_id) {
+        document.getElementById('modalTratarOS').classList.remove('hidden');
+        document.getElementById('boxTimeline').innerHTML = "Carregando...";
+        document.getElementById('tratarOsObs').value = '';
+        document.getElementById('btnImprimirModal').onclick = () => imprimirOSPdf(os_id);
+        
+        try {
+            const data = await (await apiFetch(`/api/os/${os_id}`)).json();
+            const os = data.os; const hist = data.historico;
+            window.osFiscalAtual=os; document.getElementById('boxTomboFiscal').classList.toggle('hidden', !['instalacao','substituicao'].includes(os.tipo_os)); document.getElementById('tomboFiscal').value=os.tombo && os.tombo!=='S/T'?os.tombo:'';
+
+            document.getElementById('detalheOsId').textContent = formatarNumOS(os.id, os.data_abertura);
+            document.getElementById('detalheOsBadge').textContent = (os.status === 'em_analise' ? 'AGUARDANDO VALIDAÇÃO' : os.status.replace('_', ' ')).toUpperCase();
+            document.getElementById('detalheOsTipo').innerHTML = seloTipoOS(os.tipo_os);
+            document.getElementById('detalheOsEquip').textContent = `${os.marca ? os.marca+' ' : ''}${os.tipo_equipamento || ''} ${os.capacidade || ''} (Tombo: ${os.tombo || 'A DEFINIR'})`.replace(/\s+/g,' ').trim();
+            document.getElementById('detalheOsLocal').textContent = `${esc(os.comarca)} - ${esc(os.predio)} / ${esc(os.sala)}`;
+            document.getElementById('detalheOsContrato').textContent = esc(os.contrato_nome || '-');
+            document.getElementById('detalheOsExecutante').textContent = os.nome_executante ? esc(os.nome_executante) : 'NÃO DESIGNADO';
+            document.getElementById('detalheOsDefeito').textContent = esc(os.descricao_falha);
+
+            const boxLink = document.getElementById('boxLinkAnexo');
+            if (boxLink) {
+                if (os.arquivo_conclusao || os.foto_evaporadora || os.foto_condensadora) {
+                    boxLink.innerHTML = linksAnexosOS(os);
+                    boxLink.classList.remove('hidden');
+                } else { 
+                    boxLink.classList.add('hidden'); 
+                }
+            }
+
+            let htmlHist = '';
+            hist.forEach(h => { htmlHist += `<div class="timeline-item"><div class="timeline-date">${dataFormatada(h.data_registro)}</div><div class="timeline-user">${esc(h.nome_usuario)} <span class="badge" style="background:#e2e8f0;color:#475569;">${h.acao}</span></div>${h.observacao ? `<div class="timeline-text">${esc(h.observacao)}</div>` : ''}</div>`; });
+            document.getElementById('boxTimeline').innerHTML = htmlHist;
+            document.getElementById('tratarOsId').value = os.id;
+            
+            const selStatus = document.getElementById('tratarOsStatus');
+            const boxAcao = document.getElementById('boxAcaoOS');
+            const titAcao = document.getElementById('tituloAcaoFiscal');
+
+            if (os.status === 'concluida' || os.status === 'cancelada') {
+                boxAcao.classList.add('hidden');
+            } else if (os.status === 'em_analise') {
+                boxAcao.classList.remove('hidden');
+                titAcao.textContent = "⚖️ Validação do Serviço Realizado";
+                selStatus.innerHTML = `
+                    <option value="concluida">✅ 1. Homologar e Concluir O.S. (Serviço Aprovado)</option>
+                    <option value="em_execucao">↩️ 2. Devolver para a Contratada (Exige Complementação / Retrabalho)</option>
+                    <option value="cancelada">❌ 3. Cancelar Chamado (Improcedente)</option>
+                `;
+                ajustarExigenciaObs();
+            } else if (os.status === 'aberta') {
+                boxAcao.classList.remove('hidden');
+                titAcao.textContent = "Aprovação Inicial do Chamado";
+                selStatus.innerHTML = `
+                    <option value="aprovada">✅ Aprovar O.S. (Autorizar Início)</option>
+                    <option value="cancelada">❌ Cancelar O.S. (Improcedente)</option>
+                `;
+                ajustarExigenciaObs();
+            } else {
+                boxAcao.classList.remove('hidden');
+                titAcao.textContent = "Acompanhamento Fiscal";
+                selStatus.innerHTML = `
+                    <option value="cancelada">❌ Cancelar O.S. (Em caso de erro/improcedência)</option>
+                `;
+                ajustarExigenciaObs();
+            }
+        } catch (err) { document.getElementById('boxTimeline').innerHTML = `<span style="color:red;">Erro ao carregar detalhes.</span>`; }
+    }
+
+    function ajustarExigenciaObs() {
+        const s = document.getElementById('tratarOsStatus').value;
+        const lbl = document.getElementById('lblObsFiscal');
+        const txt = document.getElementById('tratarOsObs');
+        if (s === 'em_execucao') {
+            lbl.textContent = "Motivo da Devolução para a Contratada (Obrigatório):";
+            txt.placeholder = "Descreva detalhadamente o que precisa ser corrigido ou complementado...";
+            txt.required = true;
+        } else if (s === 'cancelada') {
+            lbl.textContent = "Motivo do Cancelamento (Obrigatório):";
+            txt.placeholder = "Informe a justificativa do cancelamento...";
+            txt.required = true;
+        } else {
+            lbl.textContent = "Parecer / Observação do Fiscal (Opcional):";
+            txt.placeholder = "Observações de homologação...";
+            txt.required = false;
+        }
+    }
+
+    async function salvarTratamentoOS(e) {
+        e.preventDefault();
+        const statusNovo = document.getElementById('tratarOsStatus').value;
+        let obsTexto = document.getElementById('tratarOsObs').value.trim().toUpperCase();
+        
+        if ((statusNovo === 'em_execucao' || statusNovo === 'cancelada') && !obsTexto) {
+            return alert("É obrigatório preencher a justificativa para esta ação.");
+        }
+        if (!obsTexto && statusNovo === 'concluida') {
+            obsTexto = "SERVIÇO HOMOLOGADO E CONCLUÍDO PELO FISCAL DE CONTRATO.";
+        } else if (!obsTexto && statusNovo === 'aprovada') {
+            obsTexto = "O.S. APROVADA PELO FISCAL. AUTORIZADO INÍCIO DO ATENDIMENTO.";
+        }
+
+        const btn = document.getElementById('btnGravarDecisao');
+        btn.disabled = true; btn.textContent = 'Gravando...';
+
+        try {
+            const res = await apiFetch(`/api/os/${document.getElementById('tratarOsId').value}/status`, { 
+                method: 'PUT', 
+                body: JSON.stringify({ status: statusNovo, observacao: obsTexto, tombo: document.getElementById('tomboFiscal').value }) 
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Decisão registrada com sucesso!");
+                fecharModal('modalTratarOS'); 
+                mudarAba('geralOS');
+            } else {
+                alert(data.erro || "Erro ao gravar decisão.");
+            }
+        } catch(err) {
+            alert("Erro de comunicação com o servidor.");
+        } finally {
+            btn.disabled = false; btn.textContent = 'Confirmar Decisão';
+        }
+    }
+
+    // ====== GESTÃO DE PMOC / PREVENTIVAS ======
+    let pmocCache = [];
+    let pmocCiclosCache = [];
+    let pmocFiltros = { id: '', local: '', equip: '', contrato: '', ciclo: '', status: '' };
+
+    async function carregarPMOCServer(box) {
+        if (!contratosDoFiscal.length) await carregarListaContratosFiscal();
+        pmocCiclosCache = await (await apiFetch('/api/pmoc/ciclos')).json();
+
+        box.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h3 style="margin:0;">Plano de Manutenção, Operação e Controle (PMOC)</h3>
+                    <p style="margin:0;font-size:12px;color:#64748b;">Consulta de preventivas concluídas com comprovação e avaliação por amostragem para pagamento (Anexo 2 TJCE)</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-success" onclick="abrirModalRelatorioCicloPMOC()" style="font-weight:bold;">📊 RELATÓRIO DE CICLO (MESES ANTERIORES)</button>
+                    
+                    <button class="btn-warning" onclick="abrirModalPreventivaAvulsa()">+ PREVENTIVA AVULSA</button>
+                    <button onclick="carregarPMOCServer(document.getElementById('conteudoAba'))" class="btn-secondary">Atualizar</button>
+                </div>
+            </div>
+
+            <!-- SUB-ABAS PMOC -->
+            <div style="display:flex;gap:8px;margin-bottom:15px;border-bottom:2px solid var(--border);padding-bottom:8px;">
+                <button id="btnSubPmocOrdens" class="btn-sm btn-primary" onclick="alternarSubPmocFiscal('ordens')">📋 Preventivas Concluídas & Avaliação</button>
+                <button id="btnSubPmocCalendario" class="btn-sm btn-secondary" onclick="alternarSubPmocFiscal('calendario')">📅 Calendário Anual & Rodízio</button>
+            </div>
+
+            <!-- SEÇÃO 1: PREVENTIVAS & ORDENS -->
+            <div id="pmocSecaoOrdens">
+                <!-- FILTRO DE CONTRATO / COMPETÊNCIA / CICLO / STATUS (SEM INFORMAÇÕES REPETIDAS) -->
+                <div style="background:#f8fafc;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:15px;display:flex;gap:15px;align-items:center;flex-wrap:wrap;">
+                    <div>
+                        <label style="margin-bottom:3px;font-size:12px;">Contrato:</label>
+                        <select id="pmocFiltroContrato" onchange="aoMudarContratoFiltroPMOC()" style="margin:0;padding:6px;font-size:12px;background:#fff;">
+                            <option value="">Todos os Contratos</option>
+                            ${contratosDoFiscal.map(c => `<option value="${c.id}">${esc(c.numero_contrato)} - ${esc(c.nome_empresa)}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="margin-bottom:3px;font-size:12px;">Competência:</label>
+                        <select id="pmocFiltroCiclo" onchange="aoMudarFiltroPMOC()" style="margin:0;padding:6px;font-size:12px;background:#fff;">
+                            <option value="">Todas as Competências</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="margin-bottom:3px;font-size:12px;">Ciclo / Periodicidade:</label>
+                        <select id="pmocFiltroPeriodicidade" onchange="aoMudarFiltroPMOC()" style="margin:0;padding:6px;font-size:12px;background:#fff;">
+                            <option value="">Todos os Ciclos (M / T / S / A)</option>
+                            <option value="M">M - Mensal</option>
+                            <option value="T">T - Trimestral</option>
+                            <option value="S">S - Semestral</option>
+                            <option value="A">A - Anual</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="margin-bottom:3px;font-size:12px;">Status:</label>
+                        <select id="pmocFiltroStatus" onchange="aoMudarFiltroPMOC()" style="margin:0;padding:6px;font-size:12px;background:#fff;">
+                            <option value="">Todos (Concluídas e Reprovadas)</option>
+                            <option value="concluida">Concluída</option>
+                            <option value="reprovada">Reprovado (Avaliação Pagamento)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CARDS DE MÉTRICAS PMOC (APENAS ENCERRADAS / CONCLUÍDAS E REPROVADAS) -->
+                <div class="dash-grid" id="boxMetricasPMOC">
+                    <div class="dash-card"><div style="color:#64748b;font-size:11px;">Total Encerradas (Com Comprovação)</div><div class="dash-value" id="pmocCardTotal" style="color:var(--primary-dark);">0</div></div>
+                    <div class="dash-card"><div style="color:#64748b;font-size:11px;">Concluídas (Regulares)</div><div class="dash-value" id="pmocCardConcluidas" style="color:var(--success);">0</div></div>
+                    <div class="dash-card" style="border:2px solid #dc2626;background:#fef2f2;"><div style="color:#991b1b;font-size:11px;font-weight:bold;">Reprovadas (Avaliação Pagamento)</div><div class="dash-value" id="pmocCardReprovadas" style="color:#dc2626;">0</div></div>
+                    <div class="dash-card"><div style="color:#64748b;font-size:11px;">Conformidade p/ Pagamento</div><div class="dash-value" id="pmocCardTaxa" style="color:#0f766e;">100%</div></div>
+                </div>
+
+                <!-- TABELA DE PREVENTIVAS -->
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead id="headFiltrosPMOC">
+                            <tr><th>PMOC / Competência</th><th>Localização</th><th>Equipamento</th><th>Periodicidade</th><th>Técnico / Empresa</th><th>Status</th><th>Ações</th></tr>
+                            <tr class="filter-row">
+                                <td><input type="text" placeholder="Buscar ID..." oninput="setPmocFiltro('id', this.value)"></td>
+                                <td><input type="text" placeholder="Buscar Comarca/Prédio..." oninput="setPmocFiltro('local', this.value)"></td>
+                                <td><input type="text" placeholder="Buscar Tombo/Modelo..." oninput="setPmocFiltro('equip', this.value)"></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td><button class="btn-sm btn-secondary" onclick="limparFiltrosPMOC()" style="padding:6px;width:100%;">Limpar</button></td>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaBoxPMOC"><tr><td colspan="7">Carregando preventivas...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 2: CALENDÁRIO ANUAL & RODÍZIO -->
+            <div id="pmocSecaoCalendario" class="hidden">
+                <div id="painelCalendarioPMOCContainer"></div>
+            </div>`;
+
+        atualizarOpcoesCompetenciaPMOCFiscal();
+        await carregarListaManutencoesPMOC();
+    }
+
+    function atualizarOpcoesCompetenciaPMOCFiscal() {
+        const selCiclo = document.getElementById('pmocFiltroCiclo');
+        if (!selCiclo) return;
+        const cid = document.getElementById('pmocFiltroContrato')?.value;
+        const valorAtual = selCiclo.value;
+
+        // Filtra os ciclos do contrato selecionado e extrai apenas Competências (MM/AAAA) únicas (sem repetir contrato ou periodicidade)
+        const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const compMap = new Map();
+        (pmocCiclosCache || []).forEach(ci => {
+            if (cid && String(ci.contrato_id) !== String(cid)) return;
+            const chave = `${String(ci.mes).padStart(2, '0')}/${ci.ano}`;
+            if (!compMap.has(chave)) {
+                compMap.set(chave, `${chave} — ${nomesMeses[(ci.mes || 1) - 1]}/${ci.ano}`);
+            }
+        });
+
+        let html = '<option value="">Todas as Competências</option>';
+        for (const [val, label] of compMap.entries()) {
+            html += `<option value="${val}" ${val === valorAtual ? 'selected' : ''}>${label}</option>`;
+        }
+        selCiclo.innerHTML = html;
+    }
+
+    function aoMudarContratoFiltroPMOC() {
+        atualizarOpcoesCompetenciaPMOCFiscal();
+        carregarListaManutencoesPMOC();
+    }
+
+    function alternarSubPmocFiscal(aba) {
+        const sOrd = document.getElementById('pmocSecaoOrdens');
+        const sCal = document.getElementById('pmocSecaoCalendario');
+        const bOrd = document.getElementById('btnSubPmocOrdens');
+        const bCal = document.getElementById('btnSubPmocCalendario');
+        if (!sOrd || !sCal) return;
+        if (aba === 'calendario') {
+            sOrd.classList.add('hidden');
+            sCal.classList.remove('hidden');
+            bOrd.className = 'btn-sm btn-secondary';
+            bCal.className = 'btn-sm btn-primary';
+            renderizarPainelCalendarioPMOC(document.getElementById('painelCalendarioPMOCContainer'), true);
+        } else {
+            sOrd.classList.remove('hidden');
+            sCal.classList.add('hidden');
+            bOrd.className = 'btn-sm btn-primary';
+            bCal.className = 'btn-sm btn-secondary';
+        }
+    }
+
+    async function carregarListaManutencoesPMOC() {
+        let ep = '/api/pmoc/manutencoes?';
+        const cid = document.getElementById('pmocFiltroContrato')?.value;
+        const comp = document.getElementById('pmocFiltroCiclo')?.value;
+        const per = document.getElementById('pmocFiltroPeriodicidade')?.value;
+        const st = document.getElementById('pmocFiltroStatus')?.value;
+        if (cid) ep += `contrato_id=${encodeURIComponent(cid)}&`;
+        if (comp) ep += `competencia=${encodeURIComponent(comp)}&`;
+        if (per) ep += `periodicidade=${encodeURIComponent(per)}&`;
+        if (st) ep += `status=${encodeURIComponent(st)}&`;
+        pmocCache = await (await apiFetch(ep)).json();
+        desenharTabelaPMOC();
+    }
+
+    function aoMudarFiltroPMOC() {
+        carregarListaManutencoesPMOC();
+    }
+
+    function setPmocFiltro(campo, valor) {
+        pmocFiltros[campo] = (valor || '').toLowerCase();
+        desenharTabelaPMOC();
+    }
+
+    function limparFiltrosPMOC() {
+        pmocFiltros = { id: '', local: '', equip: '', contrato: '', ciclo: '', status: '' };
+        document.querySelectorAll('#headFiltrosPMOC input').forEach(i => i.value = '');
+        desenharTabelaPMOC();
+    }
+
+    function desenharTabelaPMOC() {
+        const tbody = document.getElementById('tabelaBoxPMOC');
+        if (!tbody) return;
+
+        let filtrados = pmocCache.filter(p => {
+            const codPmoc = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia).toLowerCase();
+            if (pmocFiltros.id && !p.id.toString().includes(pmocFiltros.id) && !codPmoc.includes(pmocFiltros.id)) return false;
+            const localTxt = `${p.comarca || ''} ${p.predio || ''} ${p.sala || ''}`.toLowerCase();
+            if (pmocFiltros.local && !localTxt.includes(pmocFiltros.local)) return false;
+            const eqTxt = `${p.marca || ''} ${p.tipo_equipamento || ''} ${p.tombo || ''}`.toLowerCase();
+            if (pmocFiltros.equip && !eqTxt.includes(pmocFiltros.equip)) return false;
+            return true;
+        });
+
+        let total = filtrados.length, conc = 0, reprov = 0;
+        filtrados.forEach(p => {
+            if (p.status === 'concluida') conc++;
+            else if (p.status === 'reprovada') reprov++;
+        });
+
+        const elTot = document.getElementById('pmocCardTotal');
+        const elConc = document.getElementById('pmocCardConcluidas');
+        const elRepr = document.getElementById('pmocCardReprovadas');
+        const elTaxa = document.getElementById('pmocCardTaxa');
+        if (elTot) elTot.textContent = total;
+        if (elConc) elConc.textContent = conc;
+        if (elRepr) elRepr.textContent = reprov;
+        const taxa = total > 0 ? Math.round((conc / total) * 100) : 100;
+        if (elTaxa) elTaxa.textContent = `${taxa}%`;
+
+        let html = '';
+        filtrados.forEach(p => {
+            const codFmt = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+            const rowClass = p.status === 'reprovada' ? 'row-os-ativa' : '';
+            const btnFolha = p.arquivo_folha_assinada ? `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(p.arquivo_folha_assinada)}');return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:3px;">📎 Comprovação</a>` : '';
+            const btnAcao = `<button class="btn-sm btn-secondary" onclick="abrirValidarPMOC(${p.id})">🔍 Conferir / Avaliar</button>`;
+
+            html += `<tr class="${rowClass}">
+                <td><strong>${codFmt}</strong><br><small style="color:#64748b;">Competência: ${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia}</small></td>
+                <td><strong>${esc(p.comarca)}</strong><br><small>${esc(p.predio)} (${esc(p.sala)})</small></td>
+                <td><strong>${esc(p.marca||'')} ${esc(p.tipo_equipamento)}</strong><br><small style="color:#64748b;">Tombo: <b>${esc(p.tombo||'S/T')}</b> | ${esc(p.capacidade||'')}</small></td>
+                <td>${seloPeriodicidade(p.periodicidade)}</td>
+                <td><strong>${esc(p.nome_executante || 'Não designado')}</strong><br><small style="color:#64748b;">${esc(p.nome_empresa||'-')}</small></td>
+                <td>${seloStatusPMOC(p.status)}${p.justificativa_fiscal && p.status === 'reprovada' ? `<br><small style="color:#dc2626;font-weight:bold;">${esc(p.justificativa_fiscal)}</small>` : ''}</td>
+                <td>${btnAcao} <button class="btn-sm btn-info" onclick="imprimirPMOCPdf(${p.id}, ${p.mes_competencia}, ${p.ano_competencia})">🖨️ PDF</button> ${btnFolha}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:15px;color:#64748b;">Nenhuma manutenção preventiva encerrada para os filtros selecionados.</td></tr>';
+    }
+
+    // ====== MODAL PREVENTIVA AVULSA ======
+    async function abrirModalPreventivaAvulsa() {
+        if (!equipamentosCache.length) equipamentosCache = await (await apiFetch('/api/equipamentos')).json();
+        const comarcas = [...new Set(equipamentosCache.filter(e => e.ativo === 1).map(e => e.comarca))].sort();
+        document.getElementById('selPmocComarca').innerHTML = '<option value="">1. Selecione a Comarca...</option>' + comarcas.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+        document.getElementById('selPmocPredio').innerHTML = '<option value="">2. Selecione o Prédio...</option>';
+        document.getElementById('selPmocSala').innerHTML = '<option value="">3. Selecione a Sala...</option>';
+        document.getElementById('selPmocEq').innerHTML = '<option value="">4. Selecione o Equipamento...</option>';
+        document.getElementById('buscaTomboPMOC').value = '';
+        const d = new Date();
+        document.getElementById('avulsaPmocMes').value = String(d.getMonth() + 1);
+        document.getElementById('avulsaPmocAno').value = d.getFullYear();
+        document.getElementById('avulsaPmocObs').value = '';
+        document.getElementById('modalPreventivaAvulsa').classList.remove('hidden');
+    }
+
+    function popularPmocPredios() {
+        const comarca = document.getElementById('selPmocComarca').value;
+        const predios = [...new Set(equipamentosCache.filter(e => e.ativo === 1 && e.comarca === comarca).map(e => e.predio))].sort();
+        document.getElementById('selPmocPredio').innerHTML = '<option value="">2. Selecione o Prédio...</option>' + predios.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+        document.getElementById('selPmocSala').innerHTML = '<option value="">3. Selecione a Sala...</option>';
+        document.getElementById('selPmocEq').innerHTML = '<option value="">4. Selecione o Equipamento...</option>';
+    }
+
+    function popularPmocSalas() {
+        const comarca = document.getElementById('selPmocComarca').value;
+        const predio = document.getElementById('selPmocPredio').value;
+        const salas = [...new Set(equipamentosCache.filter(e => e.ativo === 1 && e.comarca === comarca && e.predio === predio).map(e => e.sala))].sort();
+        document.getElementById('selPmocSala').innerHTML = '<option value="">3. Selecione a Sala...</option>' + salas.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+        document.getElementById('selPmocEq').innerHTML = '<option value="">4. Selecione o Equipamento...</option>';
+    }
+
+    function popularPmocEqs() {
+        const comarca = document.getElementById('selPmocComarca').value;
+        const predio = document.getElementById('selPmocPredio').value;
+        const sala = document.getElementById('selPmocSala').value;
+        const eqs = equipamentosCache.filter(e => e.ativo === 1 && e.comarca === comarca && e.predio === predio && e.sala === sala);
+        document.getElementById('selPmocEq').innerHTML = '<option value="">4. Selecione o Equipamento...</option>' + eqs.map(e => `<option value="${e.id}">${esc(e.marca||'')} ${esc(e.tipo_equipamento)} ${esc(e.capacidade||'')} (Tombo: ${esc(e.tombo)})</option>`).join('');
+    }
+
+    function buscarEquipamentoPorTomboPMOC() {
+        const t = document.getElementById('buscaTomboPMOC').value.trim().toUpperCase();
+        if (!t) return alert("Digite o número do tombo patrimonial.");
+        const eq = equipamentosCache.find(e => e.ativo === 1 && e.tombo === t);
+        if (!eq) return alert("Nenhum equipamento ativo encontrado com este tombo.");
+        document.getElementById('selPmocComarca').value = eq.comarca;
+        popularPmocPredios();
+        document.getElementById('selPmocPredio').value = eq.predio;
+        popularPmocSalas();
+        document.getElementById('selPmocSala').value = eq.sala;
+        popularPmocEqs();
+        document.getElementById('selPmocEq').value = eq.id;
+        alert(`Equipamento localizado: ${eq.tipo_equipamento} em ${eq.comarca} - ${eq.predio} / ${eq.sala}`);
+    }
+
+    async function enviarPreventivaAvulsa(e) {
+        e.preventDefault();
+        const eqId = parseInt(document.getElementById('selPmocEq').value);
+        if (!eqId) return alert("Selecione um equipamento.");
+        const mes = parseInt(document.getElementById('avulsaPmocMes').value);
+        const ano = parseInt(document.getElementById('avulsaPmocAno').value);
+        const periodicidade = document.getElementById('avulsaPmocPeriodicidade').value;
+        const obs = document.getElementById('avulsaPmocObs').value.trim();
+
+        try {
+            const payload = { equipamento_id: eqId, mes_competencia: mes, ano_competencia: ano, periodicidade, observacoes: obs };
+            const res = await apiFetch('/api/pmoc/manutencoes/avulsa', { method: 'POST', body: JSON.stringify(payload) });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Preventiva avulsa registrada com sucesso!");
+                fecharModal('modalPreventivaAvulsa');
+                mudarAba('pmoc');
+            } else {
+                alert(data.erro || "Erro ao criar preventiva avulsa.");
+            }
+        } catch (err) {
+            alert("Erro de comunicação com o servidor.");
+        }
+    }
+
+    // ====== MODAL VALIDAÇÃO / FISCALIZAÇÃO DO PMOC ======
+    async function abrirValidarPMOC(pmocId) {
+        document.getElementById('modalValidarPMOC').classList.remove('hidden');
+        document.getElementById('valPmocId').textContent = pmocId;
+        document.getElementById('valPmocTabelaChecklist').innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando checklist...</td></tr>';
+        document.getElementById('boxTimelinePMOC').innerHTML = 'Carregando histórico...';
+        document.getElementById('tratarPmocObs').value = '';
+        document.getElementById('tratarPmocId').value = pmocId;
+
+        try {
+            const res = await apiFetch(`/api/pmoc/manutencoes/${pmocId}`);
+            const data = await res.json();
+            if (!res.ok || !data.pmoc) throw new Error(data.erro || 'Não foi possível carregar os dados da preventiva.');
+            const p = data.pmoc;
+            const checklist = data.checklist;
+            const hist = data.historico;
+
+            document.getElementById('valPmocId').textContent = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+            document.getElementById('valPmocBadge').innerHTML = seloStatusPMOC(p.status);
+            document.getElementById('valPmocPeriodBadge').innerHTML = seloPeriodicidade(p.periodicidade);
+            document.getElementById('btnImprimirPMOCModal').onclick = () => imprimirPMOCPdf(p.id, p.mes_competencia, p.ano_competencia);
+
+            document.getElementById('valPmocEquip').textContent = `${p.marca ? p.marca+' ' : ''}${p.tipo_equipamento} ${p.capacidade || ''}`;
+            document.getElementById('valPmocTombo').textContent = p.tombo || 'S/T';
+            document.getElementById('valPmocLocal').textContent = `${esc(p.comarca)} - ${esc(p.predio)} / ${esc(p.sala)}`;
+            document.getElementById('valPmocContrato').textContent = `${esc(p.numero_contrato)} - ${esc(p.nome_empresa)}`;
+            document.getElementById('valPmocTecnico').textContent = p.nome_executante || 'NÃO DESIGNADO';
+            document.getElementById('valPmocCompetencia').textContent = `${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia} (${rotuloPeriodicidade(p.periodicidade)})`;
+
+            document.getElementById('valPmocTensao').textContent = p.tensao_medida || '-';
+            document.getElementById('valPmocCorrente').textContent = p.corrente_medida || '-';
+            document.getElementById('valPmocTempIns').textContent = p.temperatura_insuflamento || '-';
+            document.getElementById('valPmocTempRet').textContent = p.temperatura_retorno || '-';
+
+            const boxLink = document.getElementById('boxValLinkAnexo');
+            if (p.arquivo_folha_assinada) {
+                boxLink.innerHTML = `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(p.arquivo_folha_assinada)}');return false;" style="background:#10b981;color:#fff;padding:7px 12px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:12px;display:inline-block;">📎 Folha do PMOC Assinada</a>`;
+                boxLink.classList.remove('hidden');
+            } else {
+                boxLink.classList.add('hidden');
+            }
+
+            // Checklist
+            let htmlCheck = '';
+            checklist.forEach(it => {
+                const rotuloSt = { 'conforme': 'Conforme', 'corrigido': 'Corrigido', 'nao_conforme': 'Não Conforme', 'nao_se_aplica': 'N/A' }[it.status_item] || it.status_item;
+                const corSt = { 'conforme': '#10b981', 'corrigido': '#f59e0b', 'nao_conforme': '#ef4444', 'nao_se_aplica': '#64748b' }[it.status_item] || '#334155';
+                htmlCheck += `<tr>
+                    <td style="font-weight:bold;text-align:center;">${esc(it.item_codigo)}</td>
+                    <td><strong>[${esc(it.grupo)}]</strong> ${esc(it.item_descricao)}</td>
+                    <td style="text-align:center;"><span class="badge" style="background:${corSt};color:#fff;">${rotuloSt}</span></td>
+                    <td><small>${esc(it.observacao || '-')}</small></td>
+                </tr>`;
+            });
+            document.getElementById('valPmocTabelaChecklist').innerHTML = htmlCheck || '<tr><td colspan="4" style="text-align:center;">Nenhum item registrado.</td></tr>';
+
+            // Se for ordem aglutinada da comarca, renderiza tabela dos equipamentos vinculados
+            const boxListaEq = document.getElementById('boxValPmocEquipamentosAglutinados');
+            if (boxListaEq) {
+                const eqsAglut = data.equipamentos || [];
+                if (eqsAglut.length > 0) {
+                    let hEq = `
+                        <div style="margin-top:15px;background:#f8fafc;padding:12px;border-radius:6px;border:1px solid var(--border);">
+                            <h4 style="margin:0 0 8px 0;color:var(--primary-dark);font-size:13px;">🏛️ Equipamentos Atendidos nesta O.S. Preventiva da Comarca (${eqsAglut.length} aparelhos):</h4>
+                            <div style="overflow-x:auto;max-height:220px;">
+                                <table style="width:100%;font-size:11px;margin:0;">
+                                    <thead><tr style="background:#e2e8f0;"><th>Tombo</th><th>Tipo / Marca</th><th>Localização</th><th>Medições</th><th>Status</th></tr></thead>
+                                    <tbody>
+                    `;
+                    eqsAglut.forEach(item => {
+                        const m = (item.tensao_medida || item.corrente_medida) ? `${item.tensao_medida||'-'}V / ${item.corrente_medida||'-'}A` : '-';
+                        hEq += `<tr>
+                            <td><strong>${esc(item.tombo||'S/T')}</strong></td>
+                            <td>${esc(item.tipo_equipamento)} ${esc(item.capacidade||'')} ${esc(item.marca||'')}</td>
+                            <td>${esc(item.predio)} / ${esc(item.sala)}</td>
+                            <td>${m}</td>
+                            <td><span class="badge" style="background:#10b981;color:#fff;">${esc(item.status_item||'OK')}</span></td>
+                        </tr>`;
+                    });
+                    hEq += `</tbody></table></div></div>`;
+                    boxListaEq.innerHTML = hEq;
+                    boxListaEq.classList.remove('hidden');
+                } else {
+                    boxListaEq.classList.add('hidden');
+                }
+            }
+
+            const boxListaEqHide = document.getElementById('boxValPmocEquipamentosAglutinados');
+            if (boxListaEqHide) boxListaEqHide.classList.add('hidden');
+
+            // Consulta e Reprovação pelo Fiscal (não requer validação após conclusão, mas permite reprovar preventiva já concluída)
+            const boxAcao = document.getElementById('boxAcaoPMOCFiscal');
+            const titAcao = document.getElementById('tituloAcaoPMOC');
+            const selStatus = document.getElementById('tratarPmocStatus');
+
+            if (p.status === 'cancelada') {
+                boxAcao.classList.add('hidden');
+            } else if (p.status === 'reprovada') {
+                boxAcao.classList.remove('hidden');
+                titAcao.innerHTML = '❌ Preventiva Reprovada na Fiscalização <small style="font-weight:normal;color:#dc2626;">(Status registrado como REPROVADO para avaliação de pagamento e relatório final)</small>';
+                selStatus.innerHTML = `
+                    <option value="reprovada">❌ Manter Status como REPROVADO (Atualizar Parecer)</option>
+                    <option value="concluida">✅ Reverter Status para CONCLUÍDA (Regular)</option>
+                `;
+                document.getElementById('tratarPmocObs').value = p.justificativa_fiscal || '';
+                ajustarExigenciaObsPMOC();
+            } else {
+                boxAcao.classList.remove('hidden');
+                titAcao.innerHTML = '🔍 Conferência por Amostragem / Avaliação para Pagamento <small style="font-weight:normal;color:#64748b;">(Caso identifique alguma falha nesta preventiva concluída, altere o status para REPROVADO)</small>';
+                selStatus.innerHTML = `
+                    <option value="reprovada">❌ Alterar Status para REPROVADO (Falha identificada — avaliação de pagamento)</option>
+                `;
+                document.getElementById('tratarPmocObs').value = '';
+                ajustarExigenciaObsPMOC();
+            }
+
+            // Timeline
+            let htmlHist = '';
+            hist.forEach(h => {
+                htmlHist += `<div class="timeline-item">
+                    <div class="timeline-date">${dataFormatada(h.data_registro)}</div>
+                    <div class="timeline-user">${esc(h.nome_usuario)} <span class="badge" style="background:#e2e8f0;color:#475569;">${esc(h.acao)}</span></div>
+                    ${h.observacao ? `<div class="timeline-text">${esc(h.observacao)}</div>` : ''}
+                </div>`;
+            });
+            document.getElementById('boxTimelinePMOC').innerHTML = htmlHist || '<span style="font-size:12px;color:#64748b;">Nenhum registro.</span>';
+
+        } catch (err) {
+            alert("Erro ao buscar detalhes da preventiva: " + err.message);
+        }
+    }
+
+    function ajustarExigenciaObsPMOC() {
+        const st = document.getElementById('tratarPmocStatus').value;
+        const lbl = document.getElementById('lblObsPMOC');
+        const txt = document.getElementById('tratarPmocObs');
+        const btn = document.getElementById('btnGravarDecisaoPMOC');
+        if (st === 'reprovada' || st === 'cancelada') {
+            lbl.innerHTML = 'Falha Identificada / Motivo da Reprovação (Avaliação para Pagamento) <span style="color:red;">* (Obrigatório)</span>:';
+            txt.required = true;
+            if (btn) {
+                btn.className = 'btn-danger btn-block';
+                btn.textContent = '❌ Registrar como REPROVADO';
+            }
+        } else {
+            lbl.innerHTML = 'Observação da Fiscalização (Opcional):';
+            txt.required = false;
+            if (btn) {
+                btn.className = 'btn-success btn-block';
+                btn.textContent = '✅ Confirmar como Concluída (Regular)';
+            }
+        }
+    }
+
+    async function salvarDecisaoPMOC(e) {
+        e.preventDefault();
+        const pmocId = document.getElementById('tratarPmocId').value;
+        const st = document.getElementById('tratarPmocStatus').value;
+        const obs = document.getElementById('tratarPmocObs').value.trim();
+
+        if ((st === 'reprovada' || st === 'cancelada') && !obs) {
+            return alert("É obrigatório informar a falha identificada para alterar o status para REPROVADO.");
+        }
+
+        const btn = document.getElementById('btnGravarDecisaoPMOC');
+        btn.disabled = true; btn.textContent = 'Gravando avaliação...';
+
+        try {
+            const payload = { status: st, justificativa: obs };
+            const res = await apiFetch(`/api/pmoc/manutencoes/${pmocId}/validacao`, { method: 'PUT', body: JSON.stringify(payload) });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.mensagem || "Avaliação registrada com sucesso!");
+                fecharModal('modalValidarPMOC');
+                await carregarListaManutencoesPMOC();
+            } else {
+                alert(data.erro || "Erro ao gravar decisão.");
+            }
+        } catch (err) {
+            alert("Erro de comunicação com o servidor.");
+        } finally {
+            btn.disabled = false;
+            ajustarExigenciaObsPMOC();
+        }
+    }
+</script>
+</body>
+</html>

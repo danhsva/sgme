@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGME - Empresa Contratada</title>
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #f4f7f6; --card: #ffffff; --text: #1e293b; --border: #e2e8f0; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --info: #0284c7; --row-alert: #fffbeb; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
+        .hidden { display: none !important; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid var(--border); }
+        h2, h3 { color: var(--primary-dark); margin-bottom: 15px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #475569; }
+        input[type="text"], input[type="file"], select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px; font-size: 14px; background: #f8fafc; }
+        textarea { text-transform: uppercase; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); } .btn-secondary { background: #64748b; } .btn-info { background: var(--info); color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 11px; margin-bottom: 2px; } .btn-block { width: 100%; }
+        .badge { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .app-layout { display: flex; width: 100%; }
+        .sidebar { width: 65px; background: var(--card); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0; z-index: 999; display: flex; flex-direction: column; overflow-x: hidden; transition: width 0.3s; box-shadow: 2px 0 5px rgba(0,0,0,0.05); white-space: nowrap; }
+        .sidebar:hover { width: 250px; }
+        .sidebar-logo { padding: 20px; font-size: 18px; font-weight: bold; color: var(--primary-dark); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
+        .sidebar-menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 14px 20px; cursor: pointer; background: none; border: none; color: #475569; font-size: 14px; font-weight: 600; text-align: left; width: 100%; border-left: 4px solid transparent; }
+        .sidebar-item:hover { background: #f1f5f9; color: var(--primary); }
+        .sidebar-item.active { background: #e0f2fe; color: var(--primary-dark); border-left-color: var(--primary); }
+        .sidebar-icon { font-size: 18px; min-width: 20px; text-align: center; }
+        .sidebar-text { opacity: 0; transition: opacity 0.3s; }
+        .sidebar:hover .sidebar-text { opacity: 1; }
+        .main-content { margin-left: 65px; padding: 20px; width: calc(100% - 65px); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
+        th { background: #f1f5f9; cursor: pointer; }
+        tr:hover { background: #f8fafc; }
+        .filter-row input { padding: 6px; margin: 0; font-size: 11px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; }
+        .row-os-ativa { background-color: var(--row-alert) !important; border-left: 3px solid var(--warning); }
+        .row-em-analise { background-color: #f8fafc !important; opacity: 0.85; border-left: 4px solid #4f46e5 !important; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .dash-card { background: #fff; padding: 14px; border-radius: 8px; border: 1px solid var(--border); text-align: center; cursor: pointer; transition: 0.2s; }
+        .dash-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .dash-value { font-size: 22px; font-weight: bold; margin-top: 6px; }
+        .toggle-visao { display: flex; gap: 8px; background: #e2e8f0; padding: 4px; border-radius: 8px; width: fit-content; }
+        .toggle-btn { background: none; color: #475569; padding: 6px 14px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+        .toggle-btn.active { background: #fff; color: var(--primary-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .modal-box { background: #ffffff; border-radius: 12px; padding: 25px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; }
+        .timeline { border-left: 3px solid var(--border); padding-left: 15px; margin-top: 15px; font-size: 13px; }
+        .timeline-item { margin-bottom: 15px; position: relative; }
+        .timeline-item::before { content: ''; position: absolute; left: -24px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
+        .timeline-date { font-size: 11px; color: #64748b; font-weight: bold; }
+        .timeline-user { color: var(--primary-dark); font-weight: bold; margin-bottom: 4px; }
+        .timeline-text { background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid var(--border); margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="sidebar">
+            <div class="sidebar-logo"><span class="sidebar-icon">🛠️</span><span class="sidebar-text">SGME Contratada</span></div>
+            <div class="sidebar-menu">
+                <button id="tabGeralOS" class="sidebar-item" onclick="mudarAba('geralOS')"><span class="sidebar-icon">🛠️</span><span class="sidebar-text">Ordens de Serviço</span></button>
+                <button id="tabPmoc" class="sidebar-item" onclick="mudarAba('pmoc')"><span class="sidebar-icon">📅</span><span class="sidebar-text">PMOC / Preventivas</span></button>
+                <button id="tabGeralEqs" class="sidebar-item" onclick="mudarAba('geralEqs')"><span class="sidebar-icon">💻</span><span class="sidebar-text">Equipamentos</span></button>
+            </div>
+        </nav>
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h3 style="margin: 0; color: #334155;">Painel da Contratada</h3>
+                    <div style="margin-top: 4px;"><span id="usuarioNomeDisplay" style="font-weight: 600; font-size: 14px;"></span> <span class="badge">CONTRATADA</span></div>
+                </div>
+                <button onclick="fazerLogout()" class="btn-danger">Sair</button>
+            </div>
+            <div id="conteudoAba" class="card"></div>
+        </main>
+    </div>
+
+    <!-- MODAL TRATAMENTO CONTRATADA -->
+    <div id="modalTratarOS" class="modal-overlay hidden"><div class="modal-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><h3 style="margin:0;">Atendimento da O.S. <span id="detalheOsId"></span></h3><span id="detalheOsBadge" class="badge"></span></div>
+            <button class="btn-info btn-sm" id="btnImprimirModal" style="padding:8px 12px;">🖨️ PDF</button>
+        </div>
+        <div style="background:#f8fafc;border:1px solid var(--border);padding:10px;border-radius:6px;margin-top:15px;font-size:13px;">
+            <strong>Tipo:</strong> <span id="detalheOsTipo"></span><br>
+            <strong>Equipamento:</strong> <span id="detalheOsEquip"></span><br>
+            <strong>Local:</strong> <span id="detalheOsLocal"></span><br>
+            <strong>Técnico Responsável:</strong> <span id="detalheOsExecutante" style="color:var(--primary-dark);font-weight:bold;"></span><br>
+            <strong>Defeito:</strong> <span id="detalheOsDefeito" style="color:var(--danger);"></span><br>
+            <div id="boxLinkAnexo" class="hidden" style="margin-top:10px;"></div>
+        </div>
+
+        <!-- AVISO DE CUSTÓDIA DO FISCAL / SOMENTE LEITURA -->
+        <div id="boxAvisoAnalise" class="hidden" style="margin-top:15px;padding:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:6px;color:#3730a3;font-size:13px;">
+            <strong>🔒 Chamado Sob Validação Fiscal (Somente Leitura):</strong> O serviço foi finalizado e a folha assinada foi entregue ao Fiscal. Não é permitido realizar alterações até que o Fiscal valide ou devolva o chamado.
+        </div>
+
+        <div id="boxAvisoConcluida" class="hidden" style="margin-top:15px;padding:12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;color:#065f46;font-size:13px;">
+            <strong>✅ O.S. Concluída e Homologada:</strong> Chamado encerrado oficialmente pelo Fiscal de Contrato.
+        </div>
+
+        <!-- FORMULÁRIO DE ENCAMINHAMENTO (SÓ APARECE QUANDO A O.S. EXIGE AÇÃO DA CONTRATADA) -->
+        <div id="boxAcaoOS" style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border);">
+            <h4>Encaminhamento do Chamado</h4>
+            <form onsubmit="salvarTratamentoOS(event)">
+                <input type="hidden" id="tratarOsId">
+                <label>Ação a Tomar:</label>
+                <select id="tratarOsStatus" required onchange="ajustarCamposContratada()">
+                    <option value="em_execucao">1. Encaminhar para o Técnico Executante</option>
+                    <option value="aguardando_peca">2. Informar que está Aguardando Peça</option>
+                    <option value="em_analise">3. Finalizar Atendimento (Enviar para Validação Fiscal)</option>
+                </select>
+
+                <div id="boxDelegarExecutante">
+                    <label>Designar Técnico da Equipe:</label>
+                    <select id="tratarOsExecutante"></select>
+                </div>
+
+                <div id="boxObs">
+                    <label id="lblObs">Observação Técnica:</label>
+                    <textarea id="tratarOsObs" rows="3" placeholder="Insira instruções para o técnico..."></textarea>
+                </div>
+
+                <div id="boxInstalacaoContr" class="hidden" style="background:#eff6ff;padding:12px;border:1px dashed #2563eb;border-radius:6px;margin-bottom:15px"><label>Tombo do novo equipamento:</label><input type="text" id="tomboInstContr"><label>Foto da evaporadora:</label><input type="file" id="fotoEvapContr" accept="image/*"><label>Foto da condensadora:</label><input type="file" id="fotoCondContr" accept="image/*"></div><div id="boxAnexoConclusao" class="hidden" style="background:#ecfdf5;padding:12px;border-radius:6px;border:1px dashed #10b981;margin-bottom:15px;">
+                    <label style="color:#065f46;">Foto ou PDF da O.S. Assinada (Obrigatório para Validação):</label>
+                    <input type="file" id="arquivoOS" accept="image/jpeg,image/png,application/pdf">
+                </div>
+
+                <button type="submit" class="btn-success btn-block" id="btnSalvarTratamento">Confirmar Ação</button>
+            </form>
+        </div>
+
+        <h4 style="margin-top:25px;">Histórico da O.S.</h4>
+        <div id="boxTimeline" class="timeline"></div>
+        <button class="btn-secondary btn-block" style="margin-top:20px;" onclick="fecharModal('modalTratarOS')">Fechar</button>
+    </div></div>
+
+    <div id="modalHistoricoEqOS" class="modal-overlay hidden"><div class="modal-box" style="max-width: 850px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3 style="margin:0;">Histórico do Equipamento</h3><button class="btn-danger btn-sm" onclick="fecharModal('modalHistoricoEqOS')">X</button></div>
+    <h4 style="margin:10px 0 6px 0;color:var(--primary-dark);font-size:14px;">🛠️ Ordens de Serviço (Corretivas / Instalações)</h4>
+    <div style="overflow-x:auto;max-height:200px;margin-bottom:15px;border:1px solid var(--border);border-radius:6px;"><table style="margin-top:0;"><thead><tr><th>O.S. / Data</th><th>Tipo / Descrição</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaHistoricoEqOS"></tbody></table></div>
+    <h4 style="margin:10px 0 6px 0;color:var(--primary-dark);font-size:14px;">📅 Manutenções Preventivas (PMOC)</h4>
+    <div style="overflow-x:auto;max-height:200px;border:1px solid var(--border);border-radius:6px;"><table style="margin-top:0;"><thead><tr><th>PMOC / Competência</th><th>Periodicidade</th><th>Medições</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaHistoricoEqPMOC"></tbody></table></div>
+    </div></div>
+
+    <!-- MODAL ATENDIMENTO / TRATAMENTO PMOC CONTRATADA -->
+    <div id="modalTratarPMOC" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 800px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h3 style="margin:0;">Manutenção Preventiva <span id="detalhePmocId"></span></h3>
+                    <div style="margin-top:4px;"><span id="detalhePmocBadge"></span> <span id="detalhePmocPeriodBadge"></span></div>
+                </div>
+                <button class="btn-info btn-sm" id="btnImprimirPMOCModal" style="padding:8px 12px;">🖨️ PDF PMOC</button>
+            </div>
+
+            <!-- DADOS DO EQUIPAMENTO E LOCAL -->
+            <div style="background:#f8fafc;border:1px solid var(--border);padding:12px;border-radius:6px;margin-top:15px;font-size:13px;">
+                <div style="display:flex;gap:15px;flex-wrap:wrap;">
+                    <div style="flex:1;"><strong>Equipamento:</strong> <span id="detalhePmocEquip"></span></div>
+                    <div style="flex:1;"><strong>Tombo Patrimonial:</strong> <span id="detalhePmocTombo" style="font-weight:bold;color:var(--primary-dark);"></span></div>
+                </div>
+                <div style="display:flex;gap:15px;flex-wrap:wrap;margin-top:6px;">
+                    <div style="flex:1;"><strong>Localização:</strong> <span id="detalhePmocLocal"></span></div>
+                    <div style="flex:1;"><strong>Competência:</strong> <span id="detalhePmocCompetencia" style="font-weight:bold;"></span></div>
+                </div>
+                <div style="margin-top:6px;">
+                    <strong>Técnico Responsável:</strong> <span id="detalhePmocTecnicoAtual" style="color:var(--primary-dark);font-weight:bold;"></span>
+                </div>
+                <div id="boxTratarLinkFolha" class="hidden" style="margin-top:10px;"></div>
+            </div>
+
+            <!-- AVISO DE VALIDAÇÃO FISCAL OU CONCLUÍDO -->
+            <div id="boxTratarPmocAvisoAnalise" class="hidden" style="margin-top:15px;padding:12px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:6px;color:#3730a3;font-size:13px;">
+                <strong>🔒 Sob Validação Fiscal (Somente Leitura):</strong> O checklist e a folha assinada foram encaminhados ao Fiscal. Aguardando homologação ou devolução.
+            </div>
+
+            <div id="boxTratarPmocAvisoConcluida" class="hidden" style="margin-top:15px;padding:12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;color:#065f46;font-size:13px;">
+                <strong>✅ PMOC Homologado e Concluído:</strong> Manutenção atestada oficialmente pela Fiscalização do Tribunal.
+            </div>
+
+            <!-- FORMULÁRIO DE ATENDIMENTO / DELEGAÇÃO -->
+            <div id="boxAcaoPMOC" style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border);">
+                <form onsubmit="salvarTratamentoPMOC(event)">
+                    <input type="hidden" id="tratarPmocIdHidden">
+
+                    <!-- SELEÇÃO DE TÉCNICO -->
+                    <div style="background:#eff6ff;padding:12px;border:1px solid #bfdbfe;border-radius:6px;margin-bottom:15px;">
+                        <label style="color:#1e40af;margin-bottom:4px;">Designar Técnico Executante da Equipe:</label>
+                        <div style="display:flex;gap:10px;">
+                            <select id="tratarPmocTecnicoSelect" style="margin-bottom:0;"></select>
+                            <button type="button" class="btn-primary btn-sm" onclick="salvarDelegacaoPMOC()" style="white-space:nowrap;">Designar Técnico</button>
+                        </div>
+                    </div>
+
+                    <label>Ação a Tomar:</label>
+                    <select id="tratarPmocAcao" required onchange="ajustarCamposTratarPMOC()">
+                        <option value="em_execucao">1. Salvar Andamento / Em Execução</option>
+                        <option value="em_analise">2. Concluir O.S. de Preventiva (Finalizar Manutenção)</option>
+                    </select>
+
+                    <!-- MEDIÇÕES ELÉTRICAS E TÉRMICAS (ANEXO 2) -->
+                    <div style="background:#f8fafc;padding:12px;border:1px solid var(--border);border-radius:6px;margin-bottom:15px;">
+                        <strong style="display:block;font-size:13px;color:var(--primary-dark);margin-bottom:8px;">⚡ Medições Elétricas e Térmicas (Oficiais TJCE)</strong>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;">
+                            <div>
+                                <label style="font-size:11px;">Tensão Medida (V):</label>
+                                <input type="text" id="tratarPmocTensao" placeholder="Ex: 220V" style="margin-bottom:0;">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;">Corrente Medida (A):</label>
+                                <input type="text" id="tratarPmocCorrente" placeholder="Ex: 8.5A" style="margin-bottom:0;">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;">Temp. Insuflamento (ºC):</label>
+                                <input type="text" id="tratarPmocTempIns" placeholder="Ex: 14ºC" style="margin-bottom:0;">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;">Temp. Retorno (ºC):</label>
+                                <input type="text" id="tratarPmocTempRet" placeholder="Ex: 24ºC" style="margin-bottom:0;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ANEXO DA FOLHA FÍSICA ASSINADA -->
+                    <div id="boxAnexoFolhaPMOC" class="hidden" style="background:#ecfdf5;padding:12px;border-radius:6px;border:1px dashed #10b981;margin-bottom:15px;">
+                        <label style="color:#065f46;margin-bottom:4px;">📎 Inserir Comprovação da Preventiva (Obrigatório para Concluir — Foto ou PDF):</label>
+                        <input type="file" id="arquivoFolhaPMOC" accept="image/jpeg,image/png,application/pdf" style="margin-bottom:4px;">
+                        <small style="color:#047857;">Anexe a folha de Anexo 2 assinada pelo técnico e pelo responsável do local.</small>
+                    </div>
+
+                    <!-- CHECKLIST INTERATIVO -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <h4 style="margin:0;font-size:13px;">Checklist de Atividades (Anexo 2 TJCE)</h4>
+                        <button type="button" class="btn-sm btn-secondary" onclick="marcarTodosChecklistConforme()" style="font-size:11px;">⚡ Marcar Todos Conforme</button>
+                    </div>
+                    <div style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;margin-bottom:15px;">
+                        <table style="margin-top:0;font-size:11px;">
+                            <thead>
+                                <tr><th>Código</th><th>Atividade</th><th style="width:130px;">Avaliação</th><th>Observação Técnica</th></tr>
+                            </thead>
+                            <tbody id="tabelaChecklistTratarPMOC"></tbody>
+                        </table>
+                    </div>
+
+                    <label>Observação / Parecer da Contratada:</label>
+                    <textarea id="tratarPmocObsGeral" rows="2" placeholder="Observações adicionais sobre o atendimento..."></textarea>
+
+                    <button type="submit" class="btn-success btn-block" id="btnSalvarTratarPMOC">Confirmar Atendimento</button>
+                </form>
+            </div>
+
+            <h4 style="margin-top:25px;">Histórico da Preventiva</h4>
+            <div id="boxTimelinePMOC" class="timeline"></div>
+            <button class="btn-secondary btn-block" style="margin-top:20px;" onclick="fecharModal('modalTratarPMOC')">Fechar</button>
+        </div>
+    </div>
+
+<script src="config.js"></script>
+    <script src="shared.js?v=5.8"></script>
+<script>
+    let equipamentosCache = []; let osCache = []; let osAtual = null;
+    let eqSortCol = 'comarca'; let eqSortAsc = true; let eqDebounceTimeout = null;
+    let eqFiltros = { comarca:'', predio:'', sala:'', marca:'', tipo:'', cap:'', tombo:'', status:'' };
+    let osFiltros = { id:'', comarca:'', status:'', periodo:'', visao:'ativas' };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        const user = await inicializarCore('contratada');
+        if (!user) return;
+        mudarAba(sessionStorage.getItem('os_aba_contratada') || 'geralOS');
+    });
+
+    function mudarAba(abaId) {
+        sessionStorage.setItem('os_aba_contratada', abaId);
+        document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+        let btn = document.getElementById(`tab${abaId.charAt(0).toUpperCase() + abaId.slice(1)}`);
+        if (btn) btn.classList.add('active');
+        const box = document.getElementById('conteudoAba');
+        if (abaId === 'geralEqs') carregarEquipamentosServer(box); 
+        if (abaId === 'geralOS') carregarOSServer(box);
+        if (abaId === 'pmoc') carregarPMOCServer(box);
+    }
+
+    function ajustarCamposContratada() {
+        const status = document.getElementById('tratarOsStatus').value;
+        const boxExec = document.getElementById('boxDelegarExecutante');
+        const boxAnexo = document.getElementById('boxAnexoConclusao');
+        const lblObs = document.getElementById('lblObs');
+
+        if (status === 'em_execucao') {
+            boxExec.classList.remove('hidden'); boxAnexo.classList.add('hidden');
+            lblObs.textContent = "Observação / Instrução ao Técnico (Opcional):";
+        } else if (status === 'aguardando_peca') {
+            boxExec.classList.add('hidden'); boxAnexo.classList.add('hidden');
+            lblObs.textContent = "Peça Necessária / Justificativa (Obrigatório):";
+        } else if (status === 'em_analise') {
+            boxExec.classList.add('hidden'); boxAnexo.classList.remove('hidden');
+            lblObs.textContent = "Relatório do Serviço Realizado (Opcional):";
+        }
+    }
+
+    // ====== ORDENS DE SERVIÇO (COM ALTERNADOR DE FILA ATIVA VS HISTÓRICO) ======
+    async function carregarOSServer(box) {
+        box.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h3 style="margin:0 0 8px 0;">Ordens de Serviço do Contrato</h3>
+                    <div class="toggle-visao">
+                        <button type="button" id="btnVisaoAtivas" class="toggle-btn ${osFiltros.visao === 'ativas' ? 'active' : ''}" onclick="alternarVisaoOS('ativas')">⚡ Fila Ativa (Exige Ação)</button>
+                        <button type="button" id="btnVisaoTodas" class="toggle-btn ${osFiltros.visao === 'todas' ? 'active' : ''}" onclick="alternarVisaoOS('todas')">📋 Todas / Histórico</button>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <label style="margin:0;font-size:12px;color:#64748b;">Período:</label>
+                    <select id="selOsPeriodoContratada" onchange="setOsPeriodoContratada(this.value)" style="margin:0;padding:6px;width:auto;font-size:12px;background:#fff;"></select>
+                    <button onclick="carregarOSServer(document.getElementById('conteudoAba'))">Atualizar</button>
+                </div>
+            </div>
+
+            <!-- CARDS DE MÉTRICAS -->
+            <div class="dash-grid" id="boxMetricasContratada">
+                <div class="dash-card" onclick="filtrarStatusCard('')"><div style="color:#64748b;font-size:11px;">Total no Contrato</div><div class="dash-value" id="cardContratadaTotal" style="color:var(--primary-dark);">0</div></div>
+                <div class="dash-card" onclick="filtrarStatusCard('aprovada')"><div style="color:#64748b;font-size:11px;">Aguardando Início</div><div class="dash-value" id="cardContratadaAprovadas" style="color:var(--info);">0</div></div>
+                <div class="dash-card" onclick="filtrarStatusCard('em_execucao')"><div style="color:#64748b;font-size:11px;">Em Execução</div><div class="dash-value" id="cardContratadaExecucao" style="color:var(--warning);">0</div></div>
+                <div class="dash-card" onclick="filtrarStatusCard('aguardando_peca')"><div style="color:#64748b;font-size:11px;">Aguardando Peça</div><div class="dash-value" id="cardContratadaPeca" style="color:#8b5cf6;">0</div></div>
+                <div class="dash-card" style="border:2px solid #4f46e5;background:#eef2ff;" onclick="filtrarStatusCard('em_analise')"><div style="color:#4338ca;font-size:11px;font-weight:bold;">Em Validação Fiscal</div><div class="dash-value" id="cardContratadaAnalise" style="color:#4f46e5;">0</div></div>
+                <div class="dash-card" onclick="filtrarStatusCard('concluida')"><div style="color:#64748b;font-size:11px;">Concluídas</div><div class="dash-value" id="cardContratadaConcluidas" style="color:var(--success);">0</div></div>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead id="headFiltrosOS">
+                        <tr><th>ID / Data</th><th>Local</th><th>Equipamento / Defeito</th><th>Status</th><th>Ações</th></tr>
+                        <tr class="filter-row">
+                            <td><input type="text" placeholder="Buscar ID..." oninput="setOsFiltro('id', this.value)"></td>
+                            <td><input type="text" placeholder="Buscar Comarca..." oninput="setOsFiltro('comarca', this.value)"></td>
+                            <td></td>
+                            <td><input type="text" id="filtroInputStatus" placeholder="Buscar Status..." oninput="setOsFiltro('status', this.value)"></td>
+                            <td><button class="btn-sm btn-secondary" onclick="limparFiltrosOS()" style="padding:6px;width:100%;">Limpar</button></td>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBoxOS"><tr><td colspan="5">Carregando...</td></tr></tbody>
+                </table>
+            </div>`;
+
+        osCache = await (await apiFetch('/api/os')).json();
+        popularDropdownPeriodoContratada();
+        desenharTabelaOS();
+    }
+
+    function alternarVisaoOS(visao) {
+        osFiltros.visao = visao;
+        document.getElementById('btnVisaoAtivas').classList.toggle('active', visao === 'ativas');
+        document.getElementById('btnVisaoTodas').classList.toggle('active', visao === 'todas');
+        desenharTabelaOS();
+    }
+
+    function filtrarStatusCard(st) {
+        // Ao clicar num card, se for um status de histórico, abre a visão completa
+        if (['em_analise', 'reprovada', 'concluida'].includes(st)) {
+            alternarVisaoOS('todas');
+        }
+        osFiltros.status = st;
+        const inp = document.getElementById('filtroInputStatus');
+        if (inp) inp.value = st;
+        desenharTabelaOS();
+    }
+
+    function popularDropdownPeriodoContratada() {
+        const sel = document.getElementById('selOsPeriodoContratada');
+        if (!sel) return;
+        const mesesSet = new Set();
+        osCache.forEach(os => {
+            const d = new Date(os.data_abertura);
+            const chave = `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            mesesSet.add(chave);
+        });
+        const meses = Array.from(mesesSet).sort().reverse();
+        sel.innerHTML = '<option value="">Todos os Períodos</option>' + meses.map(m => `<option value="${m}" ${osFiltros.periodo === m ? 'selected' : ''}>${m}</option>`).join('');
+    }
+
+    function setOsPeriodoContratada(val) { osFiltros.periodo = val; desenharTabelaOS(); }
+    function limparFiltrosOS() { osFiltros = { id:'', comarca:'', status:'', periodo:'', visao:'ativas' }; document.querySelectorAll('#headFiltrosOS input').forEach(i=>i.value=''); const sP = document.getElementById('selOsPeriodoContratada'); if(sP) sP.value=''; alternarVisaoOS('ativas'); }
+    function setOsFiltro(c, v) { osFiltros[c] = v.toLowerCase(); desenharTabelaOS(); }
+
+    function desenharTabelaOS() {
+        const tbody = document.getElementById('tabelaBoxOS');
+        
+        // 1. Calcular Métricas de Todo o Contrato
+        let total = osCache.length, aprov = 0, exec = 0, peca = 0, analise = 0, conc = 0;
+        osCache.forEach(os => {
+            if (os.status === 'aprovada') aprov++;
+            else if (os.status === 'em_execucao') exec++;
+            else if (os.status === 'aguardando_peca') peca++;
+            else if (os.status === 'em_analise') analise++;
+            else if (os.status === 'concluida') conc++;
+        });
+
+        document.getElementById('cardContratadaTotal').textContent = total;
+        document.getElementById('cardContratadaAprovadas').textContent = aprov;
+        document.getElementById('cardContratadaExecucao').textContent = exec;
+        document.getElementById('cardContratadaPeca').textContent = peca;
+        document.getElementById('cardContratadaAnalise').textContent = analise;
+        document.getElementById('cardContratadaConcluidas').textContent = conc;
+
+        // 2. Filtrar os registros exibidos na tabela
+        let filtrados = osCache.filter(os => {
+            // Se visão for 'ativas', exibe apenas o que exige ação da Contratada!
+            if (osFiltros.visao === 'ativas') {
+                if (!['aprovada', 'em_execucao', 'aguardando_peca'].includes(os.status)) return false;
+            }
+
+            const codOs = formatarNumOS(os.id, os.data_abertura);
+            if (osFiltros.id && !os.id.toString().includes(osFiltros.id) && !codOs.toLowerCase().includes(osFiltros.id)) return false;
+            if (osFiltros.comarca && !(os.comarca||'').toLowerCase().includes(osFiltros.comarca)) return false;
+            if (osFiltros.status && !(os.status||'').toLowerCase().includes(osFiltros.status)) return false;
+            if (osFiltros.periodo) {
+                const d = new Date(os.data_abertura);
+                const chave = `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                if (chave !== osFiltros.periodo) return false;
+            }
+            return true;
+        });
+
+        let html = '';
+        filtrados.forEach(os => {
+            let cor = '#0ea5e9'; 
+            let rowClasse = '';
+            let labelStatus = os.status.replace('_', ' ').toUpperCase();
+            const exigeAcao = ['aprovada', 'em_execucao', 'aguardando_peca'].includes(os.status);
+
+            if (os.status === 'concluida') cor = '#10b981';
+            else if (os.status === 'em_execucao') cor = '#f59e0b';
+            else if (os.status === 'aguardando_peca') cor = '#8b5cf6';
+            else if (os.status === 'em_analise') { 
+                cor = '#4f46e5'; 
+                rowClasse = 'row-em-analise'; 
+                labelStatus = 'EM VALIDAÇÃO FISCAL';
+            }
+
+            let btnAnexo = os.arquivo_conclusao ? `<a href="#" onclick="event.preventDefault(); abrirAnexo('${esc(os.arquivo_conclusao)}'); return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:4px;">📎 Anexo</a>` : '';
+            let btnAcao = exigeAcao 
+                ? `<button class="btn-sm btn-primary" onclick="abrirDetalhesOS(${os.id})">Tratar / Delegar</button>`
+                : `<button class="btn-sm btn-secondary" onclick="abrirDetalhesOS(${os.id})">Visualizar</button>`;
+
+            html += `<tr class="${rowClasse}">
+                <td><strong>${formatarNumOS(os.id, os.data_abertura)}</strong><br><small>${dataFormatada(os.data_abertura)}</small></td>
+                <td><strong>${esc(os.comarca)}</strong><br><small>${esc(os.predio)} (${esc(os.sala)})</small></td>
+                <td style="max-width:250px;"><strong>${seloTipoOS(os.tipo_os)} ${os.marca ? esc(os.marca)+' ' : ''}${esc(os.tipo_equipamento)} ${esc(os.capacidade||'')}</strong><br><small style="color:#64748b;">${esc(os.descricao_falha)}</small></td>
+                <td><span class="badge" style="background:${cor};color:white;">${labelStatus}</span></td>
+                <td>${btnAcao} <button class="btn-sm btn-info" onclick="imprimirOSPdf(${os.id})">🖨️ PDF</button> ${btnAnexo}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#64748b;">Nenhuma O.S. nesta visualização.</td></tr>';
+    }
+
+    async function abrirDetalhesOS(os_id) {
+        document.getElementById('modalTratarOS').classList.remove('hidden');
+        document.getElementById('boxTimeline').innerHTML = "Carregando...";
+        document.getElementById('tratarOsObs').value = '';
+        document.getElementById('arquivoOS').value = '';
+        document.getElementById('btnImprimirModal').onclick = () => imprimirOSPdf(os_id);
+        
+        try {
+            const data = await (await apiFetch(`/api/os/${os_id}`)).json();
+            const os = data.os; osAtual=os; const hist = data.historico;
+            document.getElementById('boxInstalacaoContr').classList.toggle('hidden', !['instalacao','substituicao'].includes(os.tipo_os));
+            document.getElementById('tomboInstContr').value = os.tombo && os.tombo !== 'S/T' ? os.tombo : '';
+
+            document.getElementById('detalheOsId').textContent = formatarNumOS(os.id, os.data_abertura);
+            document.getElementById('detalheOsBadge').textContent = (os.status === 'em_analise' ? 'EM VALIDAÇÃO FISCAL' : os.status.replace('_', ' ')).toUpperCase();
+            document.getElementById('detalheOsTipo').innerHTML = seloTipoOS(os.tipo_os);
+            document.getElementById('detalheOsEquip').textContent = `${os.marca ? os.marca+' ' : ''}${os.tipo_equipamento || ''} ${os.capacidade || ''} (Tombo: ${os.tombo || 'A DEFINIR'})`.replace(/\s+/g,' ').trim();
+            document.getElementById('detalheOsLocal').textContent = `${esc(os.comarca)} - ${esc(os.predio)} / ${esc(os.sala)}`;
+            document.getElementById('detalheOsExecutante').textContent = os.nome_executante ? esc(os.nome_executante) : 'NÃO DESIGNADO';
+            document.getElementById('detalheOsDefeito').textContent = esc(os.descricao_falha);
+
+            const boxLink = document.getElementById('boxLinkAnexo');
+            if (boxLink) {
+                if (os.arquivo_conclusao || os.foto_evaporadora || os.foto_condensadora) {
+                    boxLink.innerHTML = linksAnexosOS(os);
+                    boxLink.classList.remove('hidden');
+                } else { boxLink.classList.add('hidden'); }
+            }
+
+            let htmlHist = '';
+            hist.forEach(h => { htmlHist += `<div class="timeline-item"><div class="timeline-date">${dataFormatada(h.data_registro)}</div><div class="timeline-user">${esc(h.nome_usuario)} <span class="badge" style="background:#e2e8f0;color:#475569;">${h.acao}</span></div>${h.observacao ? `<div class="timeline-text">${esc(h.observacao)}</div>` : ''}</div>`; });
+            document.getElementById('boxTimeline').innerHTML = htmlHist;
+            document.getElementById('tratarOsId').value = os.id;
+
+            const resExec = await (await apiFetch('/api/usuarios')).json();
+            const selExec = document.getElementById('tratarOsExecutante');
+            selExec.innerHTML = '<option value="">Selecione o Técnico...</option>' + 
+                resExec.map(ex => `<option value="${ex.id}" ${os.executante_id === ex.id ? 'selected' : ''}>${esc(ex.nome)}</option>`).join('');
+
+            const boxAcao = document.getElementById('boxAcaoOS');
+            const boxAvisoAnalise = document.getElementById('boxAvisoAnalise');
+            const boxAvisoConcluida = document.getElementById('boxAvisoConcluida');
+
+            // BLOQUEIO TOTAL DE ALTERAÇÃO QUANDO COM O FISCAL OU CONCLUÍDA
+            if (os.status === 'em_analise') {
+                boxAcao.classList.add('hidden');
+                boxAvisoAnalise.classList.remove('hidden');
+                boxAvisoConcluida.classList.add('hidden');
+            } else if (os.status === 'concluida' || os.status === 'cancelada') {
+                boxAcao.classList.add('hidden');
+                boxAvisoAnalise.classList.add('hidden');
+                boxAvisoConcluida.classList.remove('hidden');
+            } else {
+                // ABERTA À AÇÃO DA CONTRATADA
+                boxAcao.classList.remove('hidden');
+                boxAvisoAnalise.classList.add('hidden');
+                boxAvisoConcluida.classList.add('hidden');
+                // O.S. aprovada ou ainda sem técnico: prioridade é delegar.
+                // O.S. já atribuída: mantém a opção de continuidade/finalização.
+                const selStatus = document.getElementById('tratarOsStatus');
+                selStatus.value = (!os.executante_id || os.status === 'aprovada') ? 'em_execucao' : os.status === 'aguardando_peca' ? 'aguardando_peca' : 'em_analise';
+                ajustarCamposContratada();
+            }
+
+        } catch (err) { document.getElementById('boxTimeline').innerHTML = `<span style="color:red;">Erro ao carregar detalhes.</span>`; }
+    }
+
+    async function salvarTratamentoOS(e) {
+        e.preventDefault();
+        const statusNovo = document.getElementById('tratarOsStatus').value;
+        let obsTexto = document.getElementById('tratarOsObs').value.trim().toUpperCase();
+        const execId = document.getElementById('tratarOsExecutante').value;
+        const fileInput = document.getElementById('arquivoOS');
+        let nomeArquivoSalvo = null; let fotoEvap=null; let fotoCond=null;
+
+        if (statusNovo === 'em_execucao') {
+            if (!execId) return alert("Selecione um Técnico Executante.");
+            if (!obsTexto) obsTexto = "ENCAMINHADO PARA O TÉCNICO EXECUTANTE.";
+        } else if (statusNovo === 'aguardando_peca') {
+            if (!obsTexto) return alert("Relate qual peça está pendente.");
+        } else if (statusNovo === 'em_analise') {
+            if (osAtual && ['instalacao','substituicao'].includes(osAtual.tipo_os)) { if(!document.getElementById('tomboInstContr').value.trim() || !document.getElementById('fotoEvapContr').files[0] || !document.getElementById('fotoCondContr').files[0]) return alert('Informe tombo e as duas fotos do equipamento.'); fotoEvap=await enviarArquivoSGME(document.getElementById('fotoEvapContr').files[0],'Evaporadora'); fotoCond=await enviarArquivoSGME(document.getElementById('fotoCondContr').files[0],'Condensadora'); }
+            if (fileInput.files.length === 0) return alert("Para enviar à validação do Fiscal, anexe a folha de O.S. assinada (Foto ou PDF).");
+            if (!obsTexto) obsTexto = "ATENDIMENTO FINALIZADO PELA CONTRATADA. ENVIADO PARA VALIDAÇÃO DO FISCAL.";
+
+            const formData = new FormData();
+            document.getElementById('btnSalvarTratamento').disabled = true; formData.append('file', await otimizarImagemCliente(fileInput.files[0]));
+            const btn = document.getElementById('btnSalvarTratamento');
+            btn.disabled = true; btn.textContent = 'Enviando Foto/PDF...';
+
+            try {
+                const resUpload = await apiFetch('/api/upload', { method: 'POST', body: formData });
+                const dataUp = await resUpload.json();
+                if (!resUpload.ok) throw new Error(dataUp.erro || "Falha no upload");
+                nomeArquivoSalvo = dataUp.arquivo;
+            } catch (err) {
+                alert("Erro ao enviar anexo: " + err.message);
+                btn.disabled = false; btn.textContent = 'Confirmar Ação';
+                return;
+            }
+        }
+
+        const btn = document.getElementById('btnSalvarTratamento');
+        btn.disabled = true; btn.textContent = 'Gravando...';
+
+        try {
+            const p = { 
+                status: statusNovo, 
+                observacao: obsTexto, 
+                executante_id: (statusNovo === 'em_execucao' ? execId : null),
+                arquivo_conclusao: nomeArquivoSalvo, tombo: document.getElementById('tomboInstContr').value, foto_evaporadora: fotoEvap, foto_condensadora: fotoCond
+            };
+
+            const res = await apiFetch(`/api/os/${document.getElementById('tratarOsId').value}/status`, { 
+                method: 'PUT', 
+                body: JSON.stringify(p) 
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(statusNovo === 'em_analise' 
+                    ? "O.S. enviada com sucesso para validação do Fiscal! Ela saiu da sua fila ativa de atendimento." 
+                    : "O.S. Atualizada com sucesso!");
+                fecharModal('modalTratarOS'); 
+                await carregarOSServer(document.getElementById('conteudoAba'));
+            } else {
+                alert("Erro: " + (data.erro || "Falha ao gravar."));
+            }
+        } catch(err) {
+            alert("Erro de comunicação com o servidor.");
+        } finally {
+            btn.disabled = false; btn.textContent = 'Confirmar Ação';
+        }
+    }
+
+    async function carregarEquipamentosServer(box) {
+        box.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:15px;"><h3>Equipamentos Atendidos</h3></div><div style="overflow-x:auto;"><table><thead id="headFiltrosEq"></thead><tbody id="tabelaBoxEq"><tr><td colspan="8">Carregando...</td></tr></tbody></table></div><div id="totalEqs" style="font-size:12px;color:#64748b;margin-top:10px;"></div>`;
+        equipamentosCache = await (await apiFetch('/api/equipamentos')).json();
+        renderizarCabecalhoEq(); desenharTabelaEquipamentos();
+    }
+
+    function renderizarCabecalhoEq() {
+        const iconSort = eqSortAsc ? ' ▴' : ' ▾'; const col = (n, c) => `<th onclick="setEqSort('${c}')">${n}${eqSortCol === c ? iconSort : ''}</th>`;
+        document.getElementById('headFiltrosEq').innerHTML = `<tr>${col('Comarca','comarca')}${col('Prédio','predio')}${col('Local','sala')}${col('Marca','marca')}${col('Equipamento','tipo_equipamento')}${col('Cap','capacidade')}${col('Tombo','tombo')}${col('Status','status')}<th>Ações</th></tr>
+            <tr class="filter-row">
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('comarca', this.value)" value="${eqFiltros.comarca}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('predio', this.value)" value="${eqFiltros.predio}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('sala', this.value)" value="${eqFiltros.sala}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('marca', this.value)"></td><td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('tipo', this.value)" value="${eqFiltros.tipo}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('cap', this.value)" value="${eqFiltros.cap}"></td>
+                <td><input type="text" placeholder="Buscar..." oninput="debounceFiltroEq('tombo', this.value)" value="${eqFiltros.tombo}"></td>
+                <td><input type="text" placeholder="ativo/inativo" oninput="debounceFiltroEq('status', this.value)" value="${eqFiltros.status}"></td>
+                <td><button class="btn-sm btn-secondary" onclick="limparFiltrosEq()" style="padding:6px;width:100%;">Limpar</button></td>
+            </tr>`;
+    }
+    function debounceFiltroEq(c, v) { clearTimeout(eqDebounceTimeout); eqDebounceTimeout = setTimeout(() => { eqFiltros[c] = v.toLowerCase(); desenharTabelaEquipamentos(); }, 250); }
+    function limparFiltrosEq() { eqFiltros = { comarca:'', predio:'', sala:'', marca:'', tipo:'', cap:'', tombo:'', status:'' }; renderizarCabecalhoEq(); desenharTabelaEquipamentos(); }
+    function setEqSort(c) { if (eqSortCol === c) eqSortAsc = !eqSortAsc; else { eqSortCol = c; eqSortAsc = true; } renderizarCabecalhoEq(); desenharTabelaEquipamentos(); }
+
+    function desenharTabelaEquipamentos() {
+        const tbody = document.getElementById('tabelaBoxEq');
+        let filtrados = equipamentosCache.filter(eq => {
+            if (eqFiltros.comarca && !(eq.comarca||'').toLowerCase().includes(eqFiltros.comarca)) return false;
+            if (eqFiltros.predio && !(eq.predio||'').toLowerCase().includes(eqFiltros.predio)) return false;
+            if (eqFiltros.sala && !(eq.sala||'').toLowerCase().includes(eqFiltros.sala)) return false;
+            if (eqFiltros.marca && !(eq.marca||'').toLowerCase().includes(eqFiltros.marca)) return false;
+            if (eqFiltros.tipo && !(eq.tipo_equipamento||'').toLowerCase().includes(eqFiltros.tipo)) return false;
+            if (eqFiltros.cap && !(eq.capacidade||'').toLowerCase().includes(eqFiltros.cap)) return false;
+            if (eqFiltros.tombo && !(eq.tombo||'').toLowerCase().includes(eqFiltros.tombo)) return false;
+            if (eqFiltros.status && !(eq.ativo === 1 ? 'ativo' : 'inativo').includes(eqFiltros.status)) return false;
+            return true;
+        });
+        filtrados.sort((a, b) => {
+            let valA = (a[eqSortCol] || '').toString().toLowerCase(); let valB = (b[eqSortCol] || '').toString().toLowerCase();
+            if (valA < valB) return eqSortAsc ? -1 : 1; if (valA > valB) return eqSortAsc ? 1 : -1; return 0;
+        });
+
+        let html = '';
+        filtrados.forEach(eq => {
+            const rowClass = eq.ativo === 0 ? 'inativo' : (eq.tem_os_ativa > 0 ? 'row-os-ativa' : '');
+            const statusLabel = eq.ativo === 1 ? '<span style="color:var(--success);font-weight:bold;">Ativo</span>' : '<span style="color:var(--danger);font-weight:bold;">Inativo</span>';
+            html += `<tr class="${rowClass}"><td>${esc(eq.comarca)}</td><td>${esc(eq.predio)}</td><td>${esc(eq.sala)}</td><td>${esc(eq.marca||'-')}</td><td>${esc(eq.tipo_equipamento)}</td><td>${esc(eq.capacidade||'-')}</td><td>${eq.tombo === 'S/T' ? '<span class="badge" style="background:#e2e8f0;color:#64748b;">S/T</span>' : esc(eq.tombo)}</td><td>${statusLabel}</td><td style="white-space:nowrap;"><button class="btn-sm btn-warning" onclick="abrirHistoricoEqOS(${eq.id})">Ver O.S.</button></td></tr>`;
+        });
+        tbody.innerHTML = html; document.getElementById('totalEqs').textContent = `Total: ${filtrados.length} equipamento(s).`;
+    }
+
+    async function abrirHistoricoEqOS(eq_id) {
+        document.getElementById('modalHistoricoEqOS').classList.remove('hidden');
+        const tbodyOS = document.getElementById('tabelaHistoricoEqOS');
+        const tbodyPMOC = document.getElementById('tabelaHistoricoEqPMOC');
+        tbodyOS.innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando histórico...</td></tr>';
+        tbodyPMOC.innerHTML = '<tr><td colspan="5" style="text-align:center;">Carregando histórico PMOC...</td></tr>';
+
+        try {
+            let chamados = await (await apiFetch(`/api/equipamentos/${eq_id}/os`)).json();
+            chamados = chamados.filter(os => os.status !== 'aberta');
+            if (chamados.length === 0) { 
+                tbodyOS.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma O.S. aprovada para este equipamento.</td></tr>'; 
+            } else {
+                let html = '';
+                chamados.forEach(os => {
+                    let cor = '#0ea5e9'; if (os.status==='concluida') cor='#10b981'; if (os.status==='em_execucao') cor='#f59e0b'; if (os.status==='aguardando_peca') cor='#8b5cf6'; if (os.status==='em_analise') cor='#4f46e5';
+                    let btnAnexo = os.arquivo_conclusao ? `<a href="#" onclick="event.preventDefault(); abrirAnexo('${esc(os.arquivo_conclusao)}'); return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:4px;">📎 Anexo</a>` : '';
+                    html += `<tr><td><strong>${formatarNumOS(os.id, os.data_abertura)}</strong><br><small>${dataFormatada(os.data_abertura)}</small></td><td>${seloTipoOS(os.tipo_os)}<br><small style="color:#64748b;">${esc(os.descricao_falha)}</small></td><td><span class="badge" style="background:${cor};color:white;">${os.status.replace('_', ' ').toUpperCase()}</span></td><td><button class="btn-sm btn-secondary" onclick="fecharModal('modalHistoricoEqOS'); abrirDetalhesOS(${os.id});">Detalhes</button> <button class="btn-sm btn-info" onclick="imprimirOSPdf(${os.id})">🖨️ PDF</button> ${btnAnexo}</td></tr>`;
+                });
+                tbodyOS.innerHTML = html;
+            }
+        } catch (err) { 
+            tbodyOS.innerHTML = '<tr><td colspan="4" style="text-align:center;color:red;">Erro ao buscar dados.</td></tr>'; 
+        }
+
+        try {
+            const preventivas = await (await apiFetch(`/api/equipamentos/${eq_id}/pmoc`)).json();
+            if (preventivas.length === 0) {
+                tbodyPMOC.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhuma preventiva PMOC para este equipamento.</td></tr>';
+            } else {
+                let htmlP = '';
+                preventivas.forEach(p => {
+                    const cod = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+                    const btnFolha = p.arquivo_folha_assinada ? `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(p.arquivo_folha_assinada)}');return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:3px;">📎 Folha</a>` : '';
+                    const med = (p.tensao_medida || p.corrente_medida) ? `${esc(p.tensao_medida||'-')} / ${esc(p.corrente_medida||'-')}` : '-';
+                    htmlP += `<tr>
+                        <td><strong>${cod}</strong><br><small>${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia}</small></td>
+                        <td>${seloPeriodicidade(p.periodicidade)}</td>
+                        <td><small>${med}</small></td>
+                        <td>${seloStatusPMOC(p.status)}</td>
+                        <td><button class="btn-sm btn-secondary" onclick="fecharModal('modalHistoricoEqOS'); abrirTratarPMOC(${p.id});">Detalhes</button> <button class="btn-sm btn-info" onclick="imprimirPMOCPdf(${p.id}, ${p.mes_competencia}, ${p.ano_competencia})">🖨️ PDF</button> ${btnFolha}</td>
+                    </tr>`;
+                });
+                tbodyPMOC.innerHTML = htmlP;
+            }
+        } catch (err) {
+            tbodyPMOC.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Erro ao buscar PMOC.</td></tr>';
+        }
+    }
+
+    // ====== PMOC / PREVENTIVAS DA CONTRATADA ======
+    let pmocCache = [];
+    let pmocAtual = null;
+    let checklistCache = [];
+    let usuariosEquipeCache = [];
+    let pmocFiltros = { id: '', local: '', equip: '', status: '', periodo: '', visao: 'ativas' };
+
+    async function carregarPMOCServer(box) {
+        box.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h3 style="margin:0 0 8px 0;">Manutenções Preventivas (PMOC - Anexo 2 TJCE)</h3>
+                    <div class="toggle-visao">
+                        <button type="button" id="btnVisaoPmocAtivas" class="toggle-btn ${pmocFiltros.visao === 'ativas' ? 'active' : ''}" onclick="alternarVisaoPMOC('ativas')">⚡ Fila Ativa (Exige Ação)</button>
+                        <button type="button" id="btnVisaoPmocTodas" class="toggle-btn ${pmocFiltros.visao === 'todas' ? 'active' : ''}" onclick="alternarVisaoPMOC('todas')">📋 Todas / Histórico</button>
+                        <button type="button" id="btnVisaoPmocCalendario" class="toggle-btn ${pmocFiltros.visao === 'calendario' ? 'active' : ''}" onclick="alternarVisaoPMOC('calendario')">📅 Calendário Anual & Rodízio</button>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button type="button" class="btn-success" onclick="abrirModalRelatorioCicloPMOC()" style="font-weight:bold;">📊 Relatório de Ciclo (Meses Anteriores)</button>
+                    <label style="margin:0;font-size:12px;color:#64748b;">Competência:</label>
+                    <select id="selPmocPeriodoContratada" onchange="setPmocPeriodo(this.value)" style="margin:0;padding:6px;width:auto;font-size:12px;background:#fff;"></select>
+                    <button onclick="carregarPMOCServer(document.getElementById('conteudoAba'))">Atualizar</button>
+                </div>
+            </div>
+
+            <div id="pmocSecaoOrdensContratada">
+                <!-- CARDS DE MÉTRICAS PMOC -->
+                <div class="dash-grid" id="boxMetricasPMOCContratada">
+                    <div class="dash-card" onclick="filtrarStatusPMOCCard('')"><div style="color:#64748b;font-size:11px;">Total no Contrato</div><div class="dash-value" id="cardPmocTotal" style="color:var(--primary-dark);">0</div></div>
+                    <div class="dash-card" onclick="filtrarStatusPMOCCard('pendente')"><div style="color:#64748b;font-size:11px;">Aguardando Início</div><div class="dash-value" id="cardPmocPendentes" style="color:var(--warning);">0</div></div>
+                    <div class="dash-card" onclick="filtrarStatusPMOCCard('em_execucao')"><div style="color:#64748b;font-size:11px;">Em Execução</div><div class="dash-value" id="cardPmocExecucao" style="color:var(--info);">0</div></div>
+                    <div class="dash-card" style="border:2px solid #4f46e5;background:#eef2ff;" onclick="filtrarStatusPMOCCard('em_analise')"><div style="color:#4338ca;font-size:11px;font-weight:bold;">Em Validação Fiscal</div><div class="dash-value" id="cardPmocAnalise" style="color:#4f46e5;">0</div></div>
+                    <div class="dash-card" onclick="filtrarStatusPMOCCard('concluida')"><div style="color:#64748b;font-size:11px;">Concluídas</div><div class="dash-value" id="cardPmocConcluidas" style="color:var(--success);">0</div></div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead id="headFiltrosPMOC">
+                            <tr><th>PMOC / Competência</th><th>Localização</th><th>Equipamento / Tombo</th><th>Periodicidade</th><th>Técnico Designado</th><th>Status</th><th>Ações</th></tr>
+                            <tr class="filter-row">
+                                <td><input type="text" placeholder="Buscar ID..." oninput="setPmocFiltro('id', this.value)"></td>
+                                <td><input type="text" placeholder="Buscar Local..." oninput="setPmocFiltro('local', this.value)"></td>
+                                <td><input type="text" placeholder="Buscar Equipamento..." oninput="setPmocFiltro('equip', this.value)"></td>
+                                <td></td>
+                                <td></td>
+                                <td><input type="text" id="filtroInputStatusPMOC" placeholder="Buscar Status..." oninput="setPmocFiltro('status', this.value)"></td>
+                                <td><button class="btn-sm btn-secondary" onclick="limparFiltrosPMOC()" style="padding:6px;width:100%;">Limpar</button></td>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaBoxPMOCContratada"><tr><td colspan="7">Carregando preventivas...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="pmocSecaoCalendarioContratada" class="hidden">
+                <div id="painelCalendarioPMOCContainer"></div>
+            </div>`;
+
+        await carregarListaPMOCServer();
+    }
+
+    async function carregarListaPMOCServer() {
+        pmocCache = await (await apiFetch('/api/pmoc/manutencoes')).json();
+        popularDropdownPeriodoPMOC();
+        desenharTabelaPMOC();
+    }
+
+    function alternarVisaoPMOC(visao) {
+        pmocFiltros.visao = visao;
+        const bAtivas = document.getElementById('btnVisaoPmocAtivas');
+        const bTodas = document.getElementById('btnVisaoPmocTodas');
+        const bCal = document.getElementById('btnVisaoPmocCalendario');
+        const secOrdens = document.getElementById('pmocSecaoOrdensContratada');
+        const secCal = document.getElementById('pmocSecaoCalendarioContratada');
+
+        if (bAtivas) bAtivas.classList.toggle('active', visao === 'ativas');
+        if (bTodas) bTodas.classList.toggle('active', visao === 'todas');
+        if (bCal) bCal.classList.toggle('active', visao === 'calendario');
+
+        if (visao === 'calendario') {
+            if (secOrdens) secOrdens.classList.add('hidden');
+            if (secCal) {
+                secCal.classList.remove('hidden');
+                renderizarPainelCalendarioPMOC(document.getElementById('painelCalendarioPMOCContainer'), false);
+            }
+        } else {
+            if (secCal) secCal.classList.add('hidden');
+            if (secOrdens) secOrdens.classList.remove('hidden');
+            desenharTabelaPMOC();
+        }
+    }
+
+    function filtrarStatusPMOCCard(st) {
+        if (['em_analise', 'reprovada', 'concluida'].includes(st)) {
+            alternarVisaoPMOC('todas');
+        }
+        pmocFiltros.status = st;
+        const inp = document.getElementById('filtroInputStatusPMOC');
+        if (inp) inp.value = st;
+        desenharTabelaPMOC();
+    }
+
+    function popularDropdownPeriodoPMOC() {
+        const sel = document.getElementById('selPmocPeriodoContratada');
+        if (!sel) return;
+        const mesesSet = new Set();
+        pmocCache.forEach(p => {
+            const chave = `${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia}`;
+            mesesSet.add(chave);
+        });
+        const meses = Array.from(mesesSet).sort().reverse();
+        sel.innerHTML = '<option value="">Todas as Competências</option>' + meses.map(m => `<option value="${m}" ${pmocFiltros.periodo === m ? 'selected' : ''}>${m}</option>`).join('');
+    }
+
+    function setPmocPeriodo(val) { pmocFiltros.periodo = val; desenharTabelaPMOC(); }
+    function setPmocFiltro(campo, val) { pmocFiltros[campo] = (val || '').toLowerCase(); desenharTabelaPMOC(); }
+    function limparFiltrosPMOC() {
+        pmocFiltros = { id: '', local: '', equip: '', status: '', periodo: '', visao: 'ativas' };
+        document.querySelectorAll('#headFiltrosPMOC input').forEach(i => i.value = '');
+        const sel = document.getElementById('selPmocPeriodoContratada');
+        if (sel) sel.value = '';
+        alternarVisaoPMOC('ativas');
+    }
+
+    function desenharTabelaPMOC() {
+        const tbody = document.getElementById('tabelaBoxPMOCContratada');
+        if (!tbody) return;
+
+        let total = pmocCache.length, pend = 0, exec = 0, analise = 0, conc = 0;
+        pmocCache.forEach(p => {
+            if (p.status === 'pendente') pend++;
+            else if (p.status === 'em_execucao') exec++;
+            else if (p.status === 'reprovada' || p.status === 'em_analise') analise++;
+            else if (p.status === 'concluida') conc++;
+        });
+
+        document.getElementById('cardPmocTotal').textContent = total;
+        document.getElementById('cardPmocPendentes').textContent = pend;
+        document.getElementById('cardPmocExecucao').textContent = exec;
+        document.getElementById('cardPmocAnalise').textContent = analise;
+        document.getElementById('cardPmocConcluidas').textContent = conc;
+
+        let filtrados = pmocCache.filter(p => {
+            if (pmocFiltros.visao === 'ativas') {
+                if (!['pendente', 'em_execucao'].includes(p.status)) return false;
+            }
+            const codPmoc = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia).toLowerCase();
+            if (pmocFiltros.id && !p.id.toString().includes(pmocFiltros.id) && !codPmoc.includes(pmocFiltros.id)) return false;
+            const loc = `${p.comarca||''} ${p.predio||''} ${p.sala||''}`.toLowerCase();
+            if (pmocFiltros.local && !loc.includes(pmocFiltros.local)) return false;
+            const eq = `${p.marca||''} ${p.tipo_equipamento||''} ${p.tombo||''}`.toLowerCase();
+            if (pmocFiltros.equip && !eq.includes(pmocFiltros.equip)) return false;
+            if (pmocFiltros.status && !(p.status||'').toLowerCase().includes(pmocFiltros.status)) return false;
+            if (pmocFiltros.periodo) {
+                const comp = `${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia}`;
+                if (comp !== pmocFiltros.periodo) return false;
+            }
+            return true;
+        });
+
+        let html = '';
+        filtrados.forEach(p => {
+            const codFmt = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+            const rowClass = p.status === 'em_analise' ? 'row-em-analise' : (p.status === 'pendente' ? 'row-os-ativa' : '');
+            const exigeAcao = ['pendente', 'em_execucao'].includes(p.status);
+            const btnFolha = p.arquivo_folha_assinada ? `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(p.arquivo_folha_assinada)}');return false;" class="btn-sm btn-success" style="text-decoration:none;display:inline-block;margin-left:3px;">📎 Folha</a>` : '';
+            const btnAcao = exigeAcao 
+                ? `<button class="btn-sm btn-primary" onclick="abrirTratarPMOC(${p.id})">Atender / Delegar</button>`
+                : `<button class="btn-sm btn-secondary" onclick="abrirTratarPMOC(${p.id})">Visualizar</button>`;
+
+            html += `<tr class="${rowClass}">
+                <td><strong>${codFmt}</strong><br><small style="color:#64748b;">Competência: ${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia}</small></td>
+                <td><strong>${esc(p.comarca)}</strong><br><small>${esc(p.predio)} (${esc(p.sala)})</small></td>
+                <td><strong>${esc(p.marca||'')} ${esc(p.tipo_equipamento)}</strong><br><small style="color:#64748b;">Tombo: <b>${esc(p.tombo||'S/T')}</b> | ${esc(p.capacidade||'')}</small></td>
+                <td>${seloPeriodicidade(p.periodicidade)}</td>
+                <td><strong>${esc(p.nome_executante || 'NÃO DESIGNADO')}</strong></td>
+                <td>${seloStatusPMOC(p.status)}</td>
+                <td>${btnAcao} <button class="btn-sm btn-info" onclick="imprimirPMOCPdf(${p.id}, ${p.mes_competencia}, ${p.ano_competencia})">🖨️ PDF</button> ${btnFolha}</td>
+            </tr>`;
+        });
+
+        tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:15px;color:#64748b;">Nenhuma preventiva nesta visualização.</td></tr>';
+    }
+
+    async function abrirTratarPMOC(pmocId) {
+        document.getElementById('modalTratarPMOC').classList.remove('hidden');
+        document.getElementById('tabelaChecklistTratarPMOC').innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando checklist oficial...</td></tr>';
+        document.getElementById('boxTimelinePMOC').innerHTML = 'Carregando histórico...';
+        document.getElementById('tratarPmocObsGeral').value = '';
+        document.getElementById('tratarPmocIdHidden').value = pmocId;
+        document.getElementById('arquivoFolhaPMOC').value = '';
+
+        try {
+            const [dataPmoc, resUsers] = await Promise.all([
+                (await apiFetch(`/api/pmoc/manutencoes/${pmocId}`)).json(),
+                (await apiFetch('/api/usuarios')).json()
+            ]);
+            const p = dataPmoc.pmoc;
+            pmocAtual = p;
+            checklistCache = dataPmoc.checklist || [];
+            const hist = dataPmoc.historico || [];
+            usuariosEquipeCache = resUsers.filter(u => u.perfil === 'executante' && u.ativo === 1);
+
+            document.getElementById('detalhePmocId').textContent = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+            document.getElementById('detalhePmocBadge').innerHTML = seloStatusPMOC(p.status);
+            document.getElementById('detalhePmocPeriodBadge').innerHTML = seloPeriodicidade(p.periodicidade);
+            document.getElementById('btnImprimirPMOCModal').onclick = () => imprimirPMOCPdf(p.id, p.mes_competencia, p.ano_competencia);
+
+            document.getElementById('detalhePmocEquip').textContent = `${p.marca ? p.marca+' ' : ''}${p.tipo_equipamento} ${p.capacidade || ''}`;
+            document.getElementById('detalhePmocTombo').textContent = p.tombo || 'S/T';
+            document.getElementById('detalhePmocLocal').textContent = `${esc(p.comarca)} - ${esc(p.predio)} / ${esc(p.sala)}`;
+            document.getElementById('detalhePmocCompetencia').textContent = `${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia} (${rotuloPeriodicidade(p.periodicidade)})`;
+            document.getElementById('detalhePmocTecnicoAtual').textContent = p.nome_executante || 'NÃO DESIGNADO';
+
+            const boxLink = document.getElementById('boxTratarLinkFolha');
+            if (p.arquivo_folha_assinada) {
+                boxLink.innerHTML = `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(p.arquivo_folha_assinada)}');return false;" style="background:#10b981;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:12px;display:inline-block;">📎 Folha do PMOC Assinada Atual</a>`;
+                boxLink.classList.remove('hidden');
+            } else {
+                boxLink.classList.add('hidden');
+            }
+
+            const selTec = document.getElementById('tratarPmocTecnicoSelect');
+            selTec.innerHTML = '<option value="">Selecione o Técnico da Equipe...</option>' +
+                usuariosEquipeCache.map(u => `<option value="${u.id}" ${p.executante_id === u.id ? 'selected' : ''}>${esc(u.nome)}</option>`).join('');
+
+            document.getElementById('tratarPmocTensao').value = p.tensao_medida || '';
+            document.getElementById('tratarPmocCorrente').value = p.corrente_medida || '';
+            document.getElementById('tratarPmocTempIns').value = p.temperatura_insuflamento || '';
+            document.getElementById('tratarPmocTempRet').value = p.temperatura_retorno || '';
+            document.getElementById('tratarPmocObsGeral').value = p.observacoes_execucao || '';
+
+            const boxAcao = document.getElementById('boxAcaoPMOC');
+            const boxAnalise = document.getElementById('boxTratarPmocAvisoAnalise');
+            const boxConcluida = document.getElementById('boxTratarPmocAvisoConcluida');
+
+            if (p.status === 'em_analise') {
+                boxAcao.classList.add('hidden');
+                boxAnalise.classList.remove('hidden');
+                boxConcluida.classList.add('hidden');
+            } else if (p.status === 'concluida' || p.status === 'reprovada' || p.status === 'cancelada') {
+                boxAcao.classList.add('hidden');
+                boxAnalise.classList.add('hidden');
+                boxConcluida.classList.remove('hidden');
+            } else {
+                boxAcao.classList.remove('hidden');
+                boxAnalise.classList.add('hidden');
+                boxConcluida.classList.add('hidden');
+                document.getElementById('tratarPmocAcao').value = 'em_analise';
+                ajustarCamposTratarPMOC();
+            }
+
+            renderizarTabelaChecklist(checklistCache, ['em_analise', 'concluida', 'reprovada', 'cancelada'].includes(p.status));
+
+            let htmlHist = '';
+            hist.forEach(h => {
+                htmlHist += `<div class="timeline-item">
+                    <div class="timeline-date">${dataFormatada(h.data_registro)}</div>
+                    <div class="timeline-user">${esc(h.nome_usuario)} <span class="badge" style="background:#e2e8f0;color:#475569;">${esc(h.acao)}</span></div>
+                    ${h.observacao ? `<div class="timeline-text">${esc(h.observacao)}</div>` : ''}
+                </div>`;
+            });
+            document.getElementById('boxTimelinePMOC').innerHTML = htmlHist || '<span style="font-size:12px;color:#64748b;">Nenhum registro.</span>';
+
+        } catch (err) {
+            document.getElementById('boxTimelinePMOC').innerHTML = `<span style="color:red;">Erro ao obter dados: ${err.message}</span>`;
+        }
+    }
+
+    function renderizarTabelaChecklist(itens, desabilitado) {
+        const tbody = document.getElementById('tabelaChecklistTratarPMOC');
+        let html = '';
+        itens.forEach(it => {
+            const cod = esc(it.codigo || it.item_codigo);
+            const desc = esc(it.descricao || it.item_descricao);
+            const grp = esc(it.grupo || 'Geral');
+            const st = (it.status_item || 'conforme').toLowerCase();
+            const obs = esc(it.observacao || '');
+            const dis = desabilitado ? 'disabled' : '';
+
+            html += `<tr>
+                <td style="font-weight:bold;text-align:center;">${cod}<input type="hidden" class="chk-cod" value="${cod}"><input type="hidden" class="chk-desc" value="${desc}"><input type="hidden" class="chk-grp" value="${grp}"></td>
+                <td><strong>[${grp}]</strong> ${desc}</td>
+                <td>
+                    <select class="chk-status" style="margin:0;padding:4px;font-size:11px;" ${dis}>
+                        <option value="conforme" ${st === 'conforme' ? 'selected' : ''}>Conforme</option>
+                        <option value="corrigido" ${st === 'corrigido' ? 'selected' : ''}>Corrigido</option>
+                        <option value="nao_conforme" ${st === 'nao_conforme' ? 'selected' : ''}>Não Conforme</option>
+                        <option value="nao_se_aplica" ${st === 'nao_se_aplica' ? 'selected' : ''}>N/A</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" class="chk-obs" value="${obs}" placeholder="Obs..." style="margin:0;padding:4px;font-size:11px;" ${dis}>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html || '<tr><td colspan="4" style="text-align:center;">Nenhum item aplicável.</td></tr>';
+    }
+
+    function marcarTodosChecklistConforme() {
+        document.querySelectorAll('.chk-status').forEach(sel => sel.value = 'conforme');
+    }
+
+    function ajustarCamposTratarPMOC() {
+        const acao = document.getElementById('tratarPmocAcao').value;
+        const boxFolha = document.getElementById('boxAnexoFolhaPMOC');
+        const btn = document.getElementById('btnSalvarTratarPMOC');
+        if (acao === 'em_analise') {
+            boxFolha.classList.remove('hidden');
+            btn.textContent = '✅ Concluir O.S. de Preventiva';
+        } else {
+            boxFolha.classList.add('hidden');
+            btn.textContent = 'Salvar Andamento / Em Execução';
+        }
+    }
+
+    async function salvarDelegacaoPMOC() {
+        if (!pmocAtual) return;
+        const tecId = document.getElementById('tratarPmocTecnicoSelect').value;
+        if (!tecId) return alert('Selecione um técnico da lista.');
+        try {
+            const res = await apiFetch(`/api/pmoc/manutencoes/${pmocAtual.id}/delegar`, {
+                method: 'PUT',
+                body: JSON.stringify({ executante_id: parseInt(tecId) })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.mensagem || 'Técnico designado com sucesso!');
+                await abrirTratarPMOC(pmocAtual.id);
+                if (document.getElementById('tabPmoc')?.classList.contains('active')) {
+                    await carregarListaPMOCServer();
+                }
+            } else {
+                alert(data.erro || 'Falha ao designar técnico.');
+            }
+        } catch (e) {
+            alert('Erro ao comunicar com o servidor.');
+        }
+    }
+
+    async function salvarTratamentoPMOC(e) {
+        e.preventDefault();
+        if (!pmocAtual) return;
+        const acao = document.getElementById('tratarPmocAcao').value;
+        const fileInput = document.getElementById('arquivoFolhaPMOC');
+        const enviarValidacao = (acao === 'em_analise' || acao === 'concluida' || fileInput.files.length > 0);
+        const tensao = document.getElementById('tratarPmocTensao').value.trim();
+        const corrente = document.getElementById('tratarPmocCorrente').value.trim();
+        const tempIns = document.getElementById('tratarPmocTempIns').value.trim();
+        const tempRet = document.getElementById('tratarPmocTempRet').value.trim();
+        const obsGeral = document.getElementById('tratarPmocObsGeral').value.trim().toUpperCase();
+
+        if (enviarValidacao) {
+            if (fileInput.files.length === 0 && !(pmocAtual && pmocAtual.arquivo_folha_assinada)) {
+                return alert('Para concluir a O.S. de preventiva, é obrigatório inserir a comprovação (foto ou PDF da folha assinada) no sistema.');
+            }
+            if (!tensao || !corrente) return alert('Para concluir a O.S. de preventiva, preencha as medições de Tensão (V) e Corrente (A).');
+        }
+
+        let arquivoSalvo = null;
+        const btn = document.getElementById('btnSalvarTratarPMOC');
+        btn.disabled = true;
+
+        if (fileInput.files.length > 0) {
+            btn.textContent = 'Otimizando e enviando anexo...';
+            try {
+                const formData = new FormData();
+                formData.append('file', await otimizarImagemCliente(fileInput.files[0]));
+                const resUp = await apiFetch('/api/upload', { method: 'POST', body: formData });
+                const dataUp = await resUp.json();
+                if (!resUp.ok) throw new Error(dataUp.erro || 'Falha no upload');
+                arquivoSalvo = dataUp.arquivo;
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = 'Confirmar Atendimento';
+                return alert('Erro no envio do anexo: ' + err.message);
+            }
+        }
+
+        const checklist = [];
+        const rows = document.querySelectorAll('#tabelaChecklistTratarPMOC tr');
+        rows.forEach(tr => {
+            const cod = tr.querySelector('.chk-cod')?.value;
+            const desc = tr.querySelector('.chk-desc')?.value;
+            const grp = tr.querySelector('.chk-grp')?.value;
+            const st = tr.querySelector('.chk-status')?.value;
+            const obs = tr.querySelector('.chk-obs')?.value?.trim().toUpperCase();
+            if (cod) {
+                checklist.push({
+                    item_codigo: cod,
+                    item_descricao: desc,
+                    grupo: grp,
+                    status_item: st,
+                    observacao: obs
+                });
+            }
+        });
+
+        btn.textContent = 'Gravando atendimento...';
+        try {
+            const payload = {
+                tensao_medida: tensao,
+                corrente_medida: corrente,
+                temperatura_insuflamento: tempIns,
+                temperatura_retorno: tempRet,
+                observacoes_execucao: obsGeral,
+                arquivo_folha_assinada: arquivoSalvo,
+                checklist: checklist,
+                enviar_validacao: enviarValidacao
+            };
+
+            const res = await apiFetch(`/api/pmoc/manutencoes/${pmocAtual.id}/atendimento`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(enviarValidacao ? 'O.S. de Manutenção Preventiva concluída com sucesso!' : 'Apontamento do PMOC salvo com sucesso!');
+                fecharModal('modalTratarPMOC');
+                await carregarListaPMOCServer();
+            } else {
+                alert(data.erro || 'Falha ao salvar atendimento.');
+            }
+        } catch (err) {
+            alert('Erro ao comunicar com o servidor.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Confirmar Atendimento';
+        }
+    }
+</script>
+</body>
+</html>

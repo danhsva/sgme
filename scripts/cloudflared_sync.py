@@ -7,6 +7,7 @@ import sys
 
 BASE_DIR = "/home/daniel/sgme"
 CONFIG_JS = os.path.join(BASE_DIR, "frontend", "config.js")
+DOCS_CONFIG_JS = os.path.join(BASE_DIR, "docs", "config.js")
 CACHE_FILE = os.path.join(BASE_DIR, "dados", "current_tunnel_url.txt")
 
 def obter_url_atual():
@@ -22,6 +23,9 @@ def atualizar_config_e_git(nova_url):
     print(f"[TUNNEL-SYNC] Atualizando frontend/config.js com nova URL: {nova_url}")
     with open(CONFIG_JS, "w", encoding="utf-8") as f:
         f.write(f'window.SGME_CONFIG = {{\n    API_URL: "{nova_url}"\n}};\n')
+    if os.path.exists(os.path.dirname(DOCS_CONFIG_JS)):
+        with open(DOCS_CONFIG_JS, "w", encoding="utf-8") as f:
+            f.write(f'window.SGME_CONFIG = {{\n    API_URL: "{nova_url}"\n}};\n')
     
     os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
@@ -29,7 +33,7 @@ def atualizar_config_e_git(nova_url):
     
     # Commit e push no git (se o git remote estiver configurado e autenticado)
     try:
-        subprocess.run(["git", "-C", BASE_DIR, "add", "frontend/config.js"], check=True)
+        subprocess.run(["git", "-C", BASE_DIR, "add", "frontend/config.js", "docs/config.js"], check=True)
         # Verifica se há alteração antes de commitar
         diff = subprocess.run(["git", "-C", BASE_DIR, "diff", "--staged", "--quiet"])
         if diff.returncode != 0:

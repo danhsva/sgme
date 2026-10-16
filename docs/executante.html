@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>SGME - Técnico de Campo</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #0284c7;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 30px; }
+        .hidden { display: none !important; }
+
+        /* HEADER MOBILE STICKY */
+        .mobile-header {
+            position: sticky; top: 0; z-index: 100;
+            background: #ffffff; border-bottom: 1px solid var(--border);
+            padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .user-tag { font-size: 13px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px; }
+        .badge-perfil { background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .btn-sair { background: #fee2e2; color: var(--danger); border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+        /* CONTAINER PRINCIPAL */
+        .app-container { max-width: 650px; margin: 0 auto; padding: 15px; }
+
+        .topo-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .topo-acoes h2 { font-size: 18px; color: #1e293b; font-weight: 800; }
+        .btn-atualizar { background: #e2e8f0; color: #334155; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* CARDS DE O.S. (TOUCH FRIENDLY) */
+        .os-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px; margin-bottom: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03); transition: transform 0.1s ease;
+        }
+        .os-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .os-id { font-size: 16px; font-weight: 800; color: var(--primary-dark); }
+        .os-data { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+        .os-local { background: #f8fafc; border-left: 3px solid var(--primary); padding: 8px 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; }
+        .os-local strong { color: #1e293b; }
+
+        .os-equip { font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+        .os-defeito { font-size: 13px; color: #475569; margin-bottom: 14px; line-height: 1.4; background: #fff1f2; padding: 8px; border-radius: 6px; border: 1px dashed #fecdd3; }
+
+        .os-botoes { display: flex; gap: 8px; }
+        .btn-atender {
+            flex: 2; background: var(--success); color: white; border: none;
+            padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-pdf {
+            flex: 1; background: var(--info); color: white; border: none;
+            padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700;
+            cursor: pointer; text-align: center;
+        }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: white; }
+
+        /* MODAL TOUCH SCREEN */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
+        @media (min-width: 651px) {
+            .modal-overlay { align-items: center; padding: 15px; }
+        }
+        .modal-sheet {
+            background: #ffffff; width: 100%; max-width: 600px;
+            max-height: 92vh; overflow-y: auto; border-radius: 16px 16px 0 0;
+            padding: 20px; box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+        }
+        @media (min-width: 651px) {
+            .modal-sheet { border-radius: 12px; }
+        }
+
+        .modal-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title-bar h3 { font-size: 17px; color: #1e293b; font-weight: 800; }
+        .btn-fechar { background: #e2e8f0; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; color: #475569; cursor: pointer; }
+
+        /* FORMULÁRIO MOBILE (FONT 16PX EVITA ZOOM NO IPHONE) */
+        label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #475569; }
+        select, textarea, input[type="file"] {
+            width: 100%; padding: 12px; border: 1.5px solid var(--border);
+            border-radius: 8px; margin-bottom: 14px; font-size: 16px;
+            background: #f8fafc; color: var(--text);
+        }
+        textarea { text-transform: uppercase; min-height: 90px; }
+
+        /* CAIXA DE UPLOAD COM CÂMERA */
+        .box-camera-upload {
+            background: #ecfdf5; border: 2px dashed #10b981;
+            padding: 14px; border-radius: 8px; margin-bottom: 15px;
+            text-align: center;
+        }
+        .box-camera-upload label { color: #065f46; font-size: 13px; margin-bottom: 8px; }
+
+        .btn-confirmar {
+            width: 100%; background: var(--success); color: white;
+            border: none; padding: 14px; border-radius: 8px;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 2px 4px rgba(16,185,129,0.25);
+        }
+
+        /* ALTERNADOR DE MODO (CORRETIVA VS PREVENTIVA) */
+        .toggle-aba-mobile {
+            display: flex; gap: 8px; background: #e2e8f0; padding: 4px; border-radius: 10px; margin-bottom: 16px;
+        }
+        .btn-aba-mobile {
+            flex: 1; border: none; background: transparent; padding: 10px 6px; border-radius: 8px;
+            font-size: 13px; font-weight: 700; color: #475569; cursor: pointer; text-align: center;
+            transition: all 0.2s ease;
+        }
+        .btn-aba-mobile.active {
+            background: #ffffff; color: var(--primary-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* GRID DE MEDIÇÕES MOBILE */
+        .grid-medicoes-mobile {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+        }
+        .grid-medicoes-mobile input {
+            padding: 10px; font-size: 14px; margin-bottom: 0;
+        }
+
+        /* CARD DE ITEM CHECKLIST MOBILE */
+        .check-item-mobile {
+            background: #ffffff; border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px; margin-bottom: 8px; font-size: 12px;
+        }
+        .check-item-mobile-header {
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px;
+        }
+        .check-item-desc { font-weight: 600; color: #1e293b; }
+        .check-item-grp { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+
+        /* TIMELINE COMPACTA */
+        .timeline { border-left: 2px solid var(--border); padding-left: 12px; margin-top: 15px; }
+        .timeline-item { margin-bottom: 12px; }
+        .timeline-date { font-size: 10px; color: var(--muted); font-weight: 700; }
+        .timeline-user { font-size: 12px; color: var(--primary-dark); font-weight: 700; }
+        .timeline-text { background: #f8fafc; padding: 6px 10px; border-radius: 6px; font-size: 12px; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- CABEÇALHO SUPERIOR COMPACTO -->
+    <header class="mobile-header">
+        <div class="user-tag">
+            <span>👨‍🔧</span>
+            <span id="usuarioNomeDisplay">Técnico</span>
+            <span class="badge-perfil">CAMPO</span>
+        </div>
+        <button class="btn-sair" onclick="fazerLogout()">Sair</button>
+    </header>
+
+    <!-- LISTAGEM DE TAREFAS -->
+    <main class="app-container">
+        <!-- ALTERNADOR DE MODO: CORRETIVAS OU PREVENTIVAS -->
+        <div class="toggle-aba-mobile">
+            <button id="btnModoOS" class="btn-aba-mobile active" onclick="trocarModoExecutante('os')">🛠️ Corretivas (O.S.)</button>
+            <button id="btnModoPMOC" class="btn-aba-mobile" onclick="trocarModoExecutante('pmoc')">📅 Preventivas (PMOC)</button>
+            <button id="btnModoCal" class="btn-aba-mobile" onclick="trocarModoExecutante('calendario')">🗓️ Calendário</button>
+        </div>
+
+        <div class="topo-acoes">
+            <h2 id="tituloFila">Minha Fila de Serviço</h2>
+            <button class="btn-atualizar" onclick="atualizarFilaAtual()">🔄 Atualizar</button>
+        </div>
+
+        <div id="listaCardsTarefas">
+            <div style="text-align:center;padding:40px;color:var(--muted);">Carregando chamados...</div>
+        </div>
+    </main>
+
+    <!-- MODAL DE APONTAMENTO / FINALIZAÇÃO -->
+    <div id="modalTratarOS" class="modal-overlay hidden">
+        <div class="modal-sheet">
+            <div class="modal-title-bar">
+                <div>
+                    <h3 id="detalheOsId">O.S.</h3>
+                    <div id="detalheOsBadge" style="margin-top:2px;"></div>
+                </div>
+                <button class="btn-fechar" onclick="fecharModal('modalTratarOS')">✕</button>
+            </div>
+
+            <!-- DADOS DO LOCAL E EQUIPAMENTO -->
+            <div style="background:#f8fafc;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:15px;font-size:13px;line-height:1.5;">
+                <div style="color:var(--muted);font-size:11px;font-weight:700;">ONDE EXECUTAR:</div>
+                <strong id="detalheOsLocal" style="color:var(--primary-dark);font-size:14px;"></strong><br>
+                <span id="detalheOsTipo"></span><br>
+                <span id="detalheOsEquip" style="font-weight:600;color:#334155;"></span><br>
+                <div style="margin-top:6px;background:#fff1f2;padding:6px 8px;border-radius:6px;border:1px dashed #fecdd3;">
+                    <span style="color:var(--danger);font-weight:700;">DEFEITO: </span><span id="detalheOsDefeito" style="color:#475569;"></span>
+                </div>
+            </div>
+
+            <!-- FORMULÁRIO DE APONTAMENTO -->
+            <form onsubmit="salvarTratamentoOS(event)">
+                <input type="hidden" id="tratarOsId">
+
+                <label>Situação do Atendimento:</label>
+                <select id="tratarOsStatus" required onchange="ajustarCamposExecutante()">
+                    <option value="em_analise">1. Concluir O.S. de Preventiva (Finalizar Serviço)</option>
+                    <option value="aguardando_peca">2. Informar que está Pendente de Peça</option>
+                </select>
+
+                <!-- CAPTURA DA FOLHA ASSINADA COM A CÂMERA -->
+                <div id="boxInstalacaoExec" class="box-camera-upload hidden"><label>Tombo do novo equipamento:</label><input type="text" id="tomboInstExec" style="width:100%;padding:12px;margin-bottom:12px"><label>📷 Foto da evaporadora:</label><input type="file" id="fotoEvapExec" accept="image/*"><label>📷 Foto da condensadora:</label><input type="file" id="fotoCondExec" accept="image/*"></div><div id="boxAnexoExec" class="box-camera-upload">
+                    <label>📷 Foto ou PDF da O.S. Assinada (Obrigatório):</label>
+                    <input type="file" id="arquivoOSExec" accept="image/*,application/pdf">
+                    <div style="font-size:11px;color:#047857;margin-top:-6px;">No celular, toque para abrir a câmera ou galeria</div>
+                </div>
+
+                <div>
+                    <label id="lblObsExec">Relatório do Serviço Realizado (Opcional):</label>
+                    <textarea id="tratarOsObs" placeholder="Descreva o que foi consertado no ar-condicionado..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-confirmar" id="btnSalvarTratamento">Gravar e Enviar p/ Fiscal</button>
+            </form>
+
+            <h4 style="margin-top:20px;font-size:13px;color:var(--muted);text-transform:uppercase;">Histórico do Chamado</h4>
+            <div id="boxTimeline" class="timeline"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ATENDIMENTO PMOC MOBILE -->
+    <div id="modalTratarPMOCExec" class="modal-overlay hidden">
+        <div class="modal-sheet">
+            <div class="modal-title-bar">
+                <div>
+                    <h3 id="detalhePmocIdExec">PMOC</h3>
+                    <div id="detalhePmocBadgeExec" style="margin-top:2px;"></div>
+                </div>
+                <button class="btn-fechar" onclick="fecharModal('modalTratarPMOCExec')">✕</button>
+            </div>
+
+            <!-- DADOS DO LOCAL E EQUIPAMENTO -->
+            <div style="background:#f8fafc;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:15px;font-size:13px;line-height:1.5;">
+                <div style="color:var(--muted);font-size:11px;font-weight:700;">ONDE EXECUTAR:</div>
+                <strong id="detalhePmocLocalExec" style="color:var(--primary-dark);font-size:14px;"></strong><br>
+                <span id="detalhePmocEquipExec" style="font-weight:600;color:#334155;"></span><br>
+                <div style="margin-top:4px;color:var(--muted);font-size:12px;">
+                    Competência: <strong id="detalhePmocCompetenciaExec" style="color:#1e293b;"></strong>
+                </div>
+                <div id="boxLinkFolhaExec" class="hidden" style="margin-top:8px;"></div>
+            </div>
+
+            <!-- FORMULÁRIO DE APONTAMENTO PMOC -->
+            <form onsubmit="salvarTratamentoPMOCExec(event)">
+                <input type="hidden" id="tratarPmocIdExec">
+
+                <label>Situação do Atendimento:</label>
+                <select id="tratarPmocAcaoExec" required onchange="ajustarCamposPMOCExec()">
+                    <option value="em_analise">1. Concluir O.S. de Preventiva (Finalizar Serviço)</option>
+                    <option value="em_execucao">2. Salvar Andamento em Campo (Rascunho)</option>
+                </select>
+
+                <!-- MEDIÇÕES ELÉTRICAS E TÉRMICAS -->
+                <div style="background:#f8fafc;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:14px;">
+                    <strong style="display:block;font-size:13px;color:var(--primary-dark);margin-bottom:8px;">⚡ Medições Elétricas e Térmicas (Anexo 2)</strong>
+                    <div class="grid-medicoes-mobile">
+                        <div>
+                            <label style="font-size:11px;">Tensão Medida (V):</label>
+                            <input type="text" id="execTensao" placeholder="Ex: 220V">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;">Corrente Medida (A):</label>
+                            <input type="text" id="execCorrente" placeholder="Ex: 8.5A">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;">Insuflamento (ºC):</label>
+                            <input type="text" id="execTempIns" placeholder="Ex: 14ºC">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;">Retorno (ºC):</label>
+                            <input type="text" id="execTempRet" placeholder="Ex: 24ºC">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CAPTURA DA FOLHA FÍSICA ASSINADA -->
+                <div id="boxAnexoPMOCExec" class="box-camera-upload">
+                    <label>📷 Foto ou PDF da Folha de PMOC Assinada (Opcional):</label>
+                    <input type="file" id="arquivoFolhaPMOCExec" accept="image/*,application/pdf">
+                    <div style="font-size:11px;color:#047857;margin-top:-6px;">No celular, toque para abrir a câmera ou galeria</div>
+                </div>
+
+                <!-- CHECKLIST DE ATIVIDADES -->
+                <div style="margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <label style="margin-bottom:0;">Checklist PMOC (Anexo 2):</label>
+                        <button type="button" class="btn-atualizar" onclick="marcarTodosChecklistExecConforme()" style="padding:4px 8px;font-size:11px;">⚡ Marcar Todos Conforme</button>
+                    </div>
+                    <div id="listaChecklistMobile" style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:#f8fafc;">
+                    </div>
+                </div>
+
+                <div>
+                    <label id="lblObsPMOCExec">Observações da Execução (Opcional):</label>
+                    <textarea id="tratarPmocObsExec" placeholder="Descreva qualquer observação ou reparo realizado..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-confirmar" id="btnSalvarPMOCExec">Gravar e Enviar p/ Fiscal</button>
+            </form>
+
+            <h4 style="margin-top:20px;font-size:13px;color:var(--muted);text-transform:uppercase;">Histórico da Preventiva</h4>
+            <div id="boxTimelinePMOCExec" class="timeline"></div>
+        </div>
+    </div>
+
+<script src="config.js"></script>
+    <script src="shared.js?v=5.8"></script>
+<script>
+    let modoAtual = 'os';
+    let osCache = [];
+    let osAtual = null;
+    let pmocCache = [];
+    let pmocAtual = null;
+    let checklistExecCache = [];
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        const user = await inicializarCore('executante');
+        if (!user) return;
+        const modoSalvo = sessionStorage.getItem('executante_modo') || 'os';
+        trocarModoExecutante(modoSalvo);
+    });
+
+    function trocarModoExecutante(modo) {
+        modoAtual = modo;
+        sessionStorage.setItem('executante_modo', modo);
+        const btnOS = document.getElementById('btnModoOS');
+        const btnPMOC = document.getElementById('btnModoPMOC');
+        const btnCal = document.getElementById('btnModoCal');
+        const tit = document.getElementById('tituloFila');
+        if (btnOS) btnOS.classList.toggle('active', modo === 'os');
+        if (btnPMOC) btnPMOC.classList.toggle('active', modo === 'pmoc');
+        if (btnCal) btnCal.classList.toggle('active', modo === 'calendario');
+        if (tit) {
+            if (modo === 'os') tit.textContent = 'Minha Fila de Corretivas (O.S.)';
+            else if (modo === 'pmoc') tit.textContent = 'Minha Fila de Preventivas (PMOC)';
+            else tit.textContent = 'Calendário Anual PMOC';
+        }
+        atualizarFilaAtual();
+    }
+
+    function atualizarFilaAtual() {
+        if (modoAtual === 'os') carregarOSServer();
+        else if (modoAtual === 'pmoc') carregarPMOCServer();
+        else carregarCalendarioExecutante();
+    }
+
+    async function carregarCalendarioExecutante() {
+        const container = document.getElementById('listaCardsTarefas');
+        if (!container) return;
+        renderizarPainelCalendarioPMOC(container, false);
+    }
+
+    // ====== CHAMADOS CORRETIVOS (O.S.) ======
+    function ajustarCamposExecutante() {
+        const status = document.getElementById('tratarOsStatus').value;
+        const boxAnexo = document.getElementById('boxAnexoExec');
+        const lblObs = document.getElementById('lblObsExec');
+        const txtObs = document.getElementById('tratarOsObs');
+        const btn = document.getElementById('btnSalvarTratamento');
+
+        if (status === 'aguardando_peca') {
+            boxAnexo.classList.add('hidden');
+            lblObs.textContent = "Peça Necessária (Obrigatório):";
+            txtObs.placeholder = "Informe qual peça é necessária para o reparo...";
+            txtObs.required = true;
+            btn.textContent = "Salvar Pendência de Peça";
+        } else if (status === 'em_analise') {
+            boxAnexo.classList.remove('hidden');
+            lblObs.textContent = "Relatório do Serviço Realizado (Opcional):";
+            txtObs.placeholder = "Descreva o que foi consertado no ar-condicionado...";
+            txtObs.required = false;
+            btn.textContent = "Gravar e Enviar p/ Fiscal";
+        }
+    }
+
+    async function carregarOSServer() {
+        const container = document.getElementById('listaCardsTarefas');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Carregando chamados...</div>';
+        
+        try {
+            osCache = await (await apiFetch('/api/os')).json();
+            const pendentes = osCache.filter(os => ['em_execucao', 'aguardando_peca'].includes(os.status));
+
+            if (pendentes.length === 0) {
+                container.innerHTML = `
+                    <div style="background:#fff;border-radius:12px;padding:35px 20px;text-align:center;border:1px solid var(--border);">
+                        <div style="font-size:40px;margin-bottom:10px;">🎉</div>
+                        <h3 style="color:#10b981;font-size:17px;margin-bottom:4px;">Tudo pronto por aqui!</h3>
+                        <p style="color:var(--muted);font-size:13px;">Nenhuma O.S. pendente de execução atribuída a você no momento.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            pendentes.forEach(os => {
+                let badgeCor = '#f59e0b';
+                let statusLabel = 'EM EXECUÇÃO';
+                if (os.status === 'aguardando_peca') {
+                    badgeCor = '#8b5cf6';
+                    statusLabel = 'AGUARDANDO PEÇA';
+                }
+
+                html += `
+                <div class="os-card">
+                    <div class="os-card-header">
+                        <div>
+                            <span class="os-id">${formatarNumOS(os.id, os.data_abertura)}</span>
+                            <div class="os-data">${dataFormatada(os.data_abertura)}</div>
+                        </div>
+                        <span class="badge" style="background:${badgeCor};">${statusLabel}</span>
+                    </div>
+
+                    <div class="os-local">
+                        📍 <strong>${esc(os.comarca)}</strong><br>
+                        ${esc(os.predio)} — ${esc(os.sala)}
+                    </div>
+
+                    <div class="os-equip">❄️ ${esc(os.tipo_equipamento)} ${esc(os.capacidade||'')} (Tombo: ${esc(os.tombo||'S/T')})</div>
+                    
+                    <div class="os-defeito">
+                        <strong>Relato da Falha:</strong><br>
+                        ${esc(os.descricao_falha)}
+                    </div>
+
+                    <div class="os-botoes">
+                        <button class="btn-atender" onclick="abrirDetalhesOS(${os.id})">🛠️ Apontar Serviço</button>
+                        <button class="btn-pdf" onclick="imprimirOSPdf(${os.id})">🖨️ PDF</button>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = '<div style="color:red;text-align:center;padding:20px;">Erro ao carregar chamados. Verifique sua conexão.</div>';
+        }
+    }
+
+    async function abrirDetalhesOS(os_id) {
+        document.getElementById('modalTratarOS').classList.remove('hidden');
+        document.getElementById('boxTimeline').innerHTML = "Carregando...";
+        document.getElementById('tratarOsObs').value = '';
+        document.getElementById('arquivoOSExec').value = '';
+        document.getElementById('tratarOsStatus').value = 'em_analise';
+        ajustarCamposExecutante();
+        
+        try {
+            const data = await (await apiFetch(`/api/os/${os_id}`)).json();
+            const os = data.os; osAtual=os; const hist = data.historico;
+            document.getElementById('boxInstalacaoExec').classList.toggle('hidden', !['instalacao','substituicao'].includes(os.tipo_os));
+            document.getElementById('tomboInstExec').value = os.tombo && os.tombo !== 'S/T' ? os.tombo : '';
+
+            document.getElementById('detalheOsId').textContent = `O.S. ${formatarNumOS(os.id, os.data_abertura)}`;
+            document.getElementById('detalheOsBadge').innerHTML = `<span class="badge" style="background:${os.status === 'aguardando_peca' ? '#8b5cf6' : '#f59e0b'};">${os.status.replace('_', ' ').toUpperCase()}</span>`;
+            document.getElementById('detalheOsLocal').textContent = `${esc(os.comarca)} — ${esc(os.predio)} / ${esc(os.sala)}`;
+            document.getElementById('detalheOsTipo').innerHTML = seloTipoOS(os.tipo_os);
+            document.getElementById('detalheOsEquip').textContent = `❄️ ${os.marca ? os.marca+' ' : ''}${os.tipo_equipamento || ''} ${os.capacidade || ''} (Tombo: ${os.tombo || 'A DEFINIR'})`.replace(/\s+/g,' ').trim();
+            document.getElementById('detalheOsDefeito').textContent = esc(os.descricao_falha);
+
+            let htmlHist = '';
+            hist.forEach(h => {
+                htmlHist += `
+                <div class="timeline-item">
+                    <div class="timeline-date">${dataFormatada(h.data_registro)}</div>
+                    <div class="timeline-user">${esc(h.nome_usuario)} (${esc(h.acao)})</div>
+                    ${h.observacao ? `<div class="timeline-text">${esc(h.observacao)}</div>` : ''}
+                </div>`;
+            });
+            document.getElementById('boxTimeline').innerHTML = htmlHist || '<span style="font-size:12px;color:var(--muted);">Nenhum histórico registrado.</span>';
+            document.getElementById('tratarOsId').value = os.id;
+
+        } catch (err) {
+            document.getElementById('boxTimeline').innerHTML = `<span style="color:red;">Erro ao obter dados do chamado.</span>`;
+        }
+    }
+
+    async function salvarTratamentoOS(e) {
+        e.preventDefault();
+        const statusNovo = document.getElementById('tratarOsStatus').value;
+        let obsTexto = document.getElementById('tratarOsObs').value.trim().toUpperCase();
+        const fileInput = document.getElementById('arquivoOSExec');
+        let nomeArquivoSalvo = null; let fotoEvap=null; let fotoCond=null;
+
+        if (statusNovo === 'aguardando_peca') {
+            if (!obsTexto) return alert("É OBRIGATÓRIO informar qual peça está pendente.");
+        } else if (statusNovo === 'em_analise') {
+            if (osAtual && ['instalacao','substituicao'].includes(osAtual.tipo_os)) {
+                if (!document.getElementById('tomboInstExec').value.trim() || !document.getElementById('fotoEvapExec').files[0] || !document.getElementById('fotoCondExec').files[0]) return alert('Informe o tombo e as fotos da evaporadora e condensadora.');
+                fotoEvap=await enviarArquivoSGME(document.getElementById('fotoEvapExec').files[0],'Evaporadora');
+                fotoCond=await enviarArquivoSGME(document.getElementById('fotoCondExec').files[0],'Condensadora');
+            }
+            if (fileInput.files.length === 0) {
+                return alert("Para finalizar o serviço, é OBRIGATÓRIO tirar foto ou anexar o PDF da folha de O.S. assinada.");
+            }
+            if (!obsTexto) obsTexto = "SERVIÇO EXECUTADO EM CAMPO. FOLHA ASSINADA ENVIADA PARA VALIDAÇÃO DO FISCAL.";
+
+            const formData = new FormData();
+            document.getElementById('btnSalvarTratamento').disabled = true; formData.append('file', await otimizarImagemCliente(fileInput.files[0]));
+            const btn = document.getElementById('btnSalvarTratamento');
+            btn.disabled = true; btn.textContent = 'Enviando Foto/PDF...';
+
+            try {
+                const resUpload = await apiFetch('/api/upload', { method: 'POST', body: formData });
+                const dataUp = await resUpload.json();
+                if (!resUpload.ok) throw new Error(dataUp.erro || "Falha no envio do anexo");
+                nomeArquivoSalvo = dataUp.arquivo;
+            } catch (err) {
+                alert("Erro no upload do anexo: " + err.message);
+                btn.disabled = false; btn.textContent = '✅ Concluir O.S. de Preventiva';
+                return;
+            }
+        }
+
+        const btn = document.getElementById('btnSalvarTratamento');
+        btn.disabled = true; btn.textContent = 'Gravando...';
+
+        try {
+            const res = await apiFetch(`/api/os/${document.getElementById('tratarOsId').value}/status`, { 
+                method: 'PUT', 
+                body: JSON.stringify({ status: statusNovo, observacao: obsTexto, arquivo_conclusao: nomeArquivoSalvo, tombo: document.getElementById('tomboInstExec').value, foto_evaporadora: fotoEvap, foto_condensadora: fotoCond }) 
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert(statusNovo === 'em_analise' 
+                    ? "Serviço finalizado com sucesso! O chamado foi enviado para a validação do Fiscal e saiu da sua fila." 
+                    : "Pendência de peça registrada!");
+                fecharModal('modalTratarOS'); 
+                carregarOSServer();
+            } else {
+                alert(data.erro || "Erro ao gravar apontamento.");
+            }
+        } catch(err) {
+            alert("Erro de comunicação com o servidor.");
+        } finally {
+            btn.disabled = false; btn.textContent = '✅ Concluir O.S. de Preventiva';
+        }
+    }
+
+    // ====== MANUTENÇÕES PREVENTIVAS (PMOC) ======
+    async function carregarPMOCServer() {
+        const container = document.getElementById('listaCardsTarefas');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Carregando preventivas...</div>';
+
+        try {
+            pmocCache = await (await apiFetch('/api/pmoc/manutencoes')).json();
+            // Para o técnico: exibe apenas o que exige ação de campo
+            const pendentes = pmocCache.filter(p => ['pendente', 'em_execucao', 'aguardando_peca'].includes(p.status));
+
+            if (pendentes.length === 0) {
+                container.innerHTML = `
+                    <div style="background:#fff;border-radius:12px;padding:35px 20px;text-align:center;border:1px solid var(--border);">
+                        <div style="font-size:40px;margin-bottom:10px;">🎉</div>
+                        <h3 style="color:#10b981;font-size:17px;margin-bottom:4px;">Tudo em dia com o PMOC!</h3>
+                        <p style="color:var(--muted);font-size:13px;">Nenhuma preventiva pendente atribuída a você no momento.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            pendentes.forEach(p => {
+                const cod = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+                html += `
+                <div class="os-card">
+                    <div class="os-card-header">
+                        <div>
+                            <span class="os-id">${cod}</span>
+                            <div class="os-data">Competência: <strong>${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia}</strong></div>
+                        </div>
+                        <div style="text-align:right;">
+                            ${seloStatusPMOC(p.status)}
+                            <div style="margin-top:4px;">${seloPeriodicidade(p.periodicidade)}</div>
+                        </div>
+                    </div>
+
+                    <div class="os-local">
+                        📍 <strong>${esc(p.comarca)}</strong><br>
+                        ${esc(p.predio)} — ${esc(p.sala)}
+                    </div>
+
+                    <div class="os-equip">❄️ ${esc(p.marca||'')} ${esc(p.tipo_equipamento)} ${esc(p.capacidade||'')} (Tombo: ${esc(p.tombo||'S/T')})</div>
+
+                    <div class="os-botoes">
+                        <button class="btn-atender" onclick="abrirDetalhesPMOCExec(${p.id})">📋 Executar PMOC</button>
+                        <button class="btn-pdf" onclick="imprimirPMOCPdf(${p.id}, ${p.mes_competencia}, ${p.ano_competencia})">🖨️ PDF</button>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = '<div style="color:red;text-align:center;padding:20px;">Erro ao carregar preventivas. Verifique sua conexão.</div>';
+        }
+    }
+
+    async function abrirDetalhesPMOCExec(pmocId) {
+        document.getElementById('modalTratarPMOCExec').classList.remove('hidden');
+        document.getElementById('listaChecklistMobile').innerHTML = '<div style="text-align:center;padding:15px;color:var(--muted);">Carregando checklist oficial...</div>';
+        document.getElementById('boxTimelinePMOCExec').innerHTML = 'Carregando histórico...';
+        document.getElementById('tratarPmocObsExec').value = '';
+        document.getElementById('arquivoFolhaPMOCExec').value = '';
+        document.getElementById('tratarPmocIdExec').value = pmocId;
+        document.getElementById('tratarPmocAcaoExec').value = 'em_analise';
+        ajustarCamposPMOCExec();
+
+        try {
+            const data = await (await apiFetch(`/api/pmoc/manutencoes/${pmocId}`)).json();
+            const p = data.pmoc;
+            pmocAtual = p;
+            checklistExecCache = data.checklist || [];
+            const hist = data.historico || [];
+
+            document.getElementById('detalhePmocIdExec').textContent = formatarNumPMOC(p.id, p.mes_competencia, p.ano_competencia);
+            document.getElementById('detalhePmocBadgeExec').innerHTML = `${seloStatusPMOC(p.status)} ${seloPeriodicidade(p.periodicidade)}`;
+            document.getElementById('detalhePmocLocalExec').textContent = `${esc(p.comarca)} — ${esc(p.predio)} / ${esc(p.sala)}`;
+            document.getElementById('detalhePmocEquipExec').textContent = `❄️ ${p.marca ? p.marca+' ' : ''}${p.tipo_equipamento} ${p.capacidade || ''} (Tombo: ${esc(p.tombo||'S/T')})`;
+            document.getElementById('detalhePmocCompetenciaExec').textContent = `${String(p.mes_competencia).padStart(2,'0')}/${p.ano_competencia} (${rotuloPeriodicidade(p.periodicidade)})`;
+
+            const boxLink = document.getElementById('boxLinkFolhaExec');
+            if (p.arquivo_folha_assinada) {
+                boxLink.innerHTML = `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(p.arquivo_folha_assinada)}');return false;" style="background:#10b981;color:#fff;padding:6px 10px;border-radius:6px;text-decoration:none;font-size:12px;display:inline-block;font-weight:700;">📎 Folha Assinada Atual</a>`;
+                boxLink.classList.remove('hidden');
+            } else {
+                boxLink.classList.add('hidden');
+            }
+
+            // Preenche medições prévias
+            document.getElementById('execTensao').value = p.tensao_medida || '';
+            document.getElementById('execCorrente').value = p.corrente_medida || '';
+            document.getElementById('execTempIns').value = p.temperatura_insuflamento || '';
+            document.getElementById('execTempRet').value = p.temperatura_retorno || '';
+            document.getElementById('tratarPmocObsExec').value = p.observacoes_execucao || '';
+
+            // Renderiza itens do checklist em cartões touch-friendly
+            renderizarChecklistMobile(checklistExecCache);
+
+            // Timeline
+            let htmlHist = '';
+            hist.forEach(h => {
+                htmlHist += `
+                <div class="timeline-item">
+                    <div class="timeline-date">${dataFormatada(h.data_registro)}</div>
+                    <div class="timeline-user">${esc(h.nome_usuario)} (${esc(h.acao)})</div>
+                    ${h.observacao ? `<div class="timeline-text">${esc(h.observacao)}</div>` : ''}
+                </div>`;
+            });
+            document.getElementById('boxTimelinePMOCExec').innerHTML = htmlHist || '<span style="font-size:12px;color:var(--muted);">Nenhum registro.</span>';
+
+        } catch (err) {
+            document.getElementById('listaChecklistMobile').innerHTML = '<div style="color:red;padding:10px;">Erro ao carregar detalhes.</div>';
+        }
+    }
+
+    function renderizarChecklistMobile(itens) {
+        const box = document.getElementById('listaChecklistMobile');
+        let html = '';
+        itens.forEach(it => {
+            const cod = esc(it.codigo || it.item_codigo);
+            const desc = esc(it.descricao || it.item_descricao);
+            const grp = esc(it.grupo || 'Geral');
+            const st = (it.status_item || 'conforme').toLowerCase();
+            const obs = esc(it.observacao || '');
+
+            html += `
+            <div class="check-item-mobile">
+                <input type="hidden" class="chk-cod-exec" value="${cod}">
+                <input type="hidden" class="chk-desc-exec" value="${desc}">
+                <input type="hidden" class="chk-grp-exec" value="${grp}">
+                <div class="check-item-mobile-header">
+                    <div>
+                        <span class="check-item-grp">[${grp}]</span>
+                        <div class="check-item-desc">${cod} - ${desc}</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:6px;">
+                    <select class="chk-status-exec" style="margin:0;padding:8px;font-size:13px;flex:1;">
+                        <option value="conforme" ${st === 'conforme' ? 'selected' : ''}>Conforme</option>
+                        <option value="corrigido" ${st === 'corrigido' ? 'selected' : ''}>Corrigido</option>
+                        <option value="nao_conforme" ${st === 'nao_conforme' ? 'selected' : ''}>Não Conforme</option>
+                        <option value="nao_se_aplica" ${st === 'nao_se_aplica' ? 'selected' : ''}>N/A</option>
+                    </select>
+                    <input type="text" class="chk-obs-exec" value="${obs}" placeholder="Obs (opcional)..." style="margin:0;padding:8px;font-size:13px;flex:1.2;">
+                </div>
+            </div>`;
+        });
+        box.innerHTML = html || '<div style="text-align:center;padding:10px;color:var(--muted);">Nenhum item aplicável.</div>';
+    }
+
+    function marcarTodosChecklistExecConforme() {
+        document.querySelectorAll('.chk-status-exec').forEach(sel => sel.value = 'conforme');
+    }
+
+    function ajustarCamposPMOCExec() {
+        const acao = document.getElementById('tratarPmocAcaoExec').value;
+        const boxFolha = document.getElementById('boxAnexoPMOCExec');
+        const btn = document.getElementById('btnSalvarPMOCExec');
+        if (acao === 'em_analise') {
+            boxFolha.classList.remove('hidden');
+            btn.textContent = '✅ Concluir O.S. de Preventiva';
+        } else {
+            boxFolha.classList.add('hidden');
+            btn.textContent = 'Salvar Andamento (Rascunho)';
+        }
+    }
+
+    async function salvarTratamentoPMOCExec(e) {
+        e.preventDefault();
+        if (!pmocAtual) return;
+        const acao = document.getElementById('tratarPmocAcaoExec').value;
+        const fileInput = document.getElementById('arquivoFolhaPMOCExec');
+        const enviarValidacao = (acao === 'em_analise' || acao === 'concluida' || fileInput.files.length > 0);
+        const tensao = document.getElementById('execTensao').value.trim();
+        const corrente = document.getElementById('execCorrente').value.trim();
+        const tempIns = document.getElementById('execTempIns').value.trim();
+        const tempRet = document.getElementById('execTempRet').value.trim();
+        let obsTexto = document.getElementById('tratarPmocObsExec').value.trim().toUpperCase();
+
+        if (enviarValidacao) {
+            if (fileInput.files.length === 0 && !(pmocAtual && pmocAtual.arquivo_folha_assinada)) {
+                return alert("Para concluir a O.S. de preventiva, é obrigatório inserir a comprovação (foto ou PDF) no sistema.");
+            }
+            if (!tensao || !corrente) return alert("Para concluir a preventiva, é obrigatório preencher Tensão (V) e Corrente (A).");
+            if (!obsTexto) obsTexto = "MANUTENÇÃO PREVENTIVA PMOC EXECUTADA E CONCLUÍDA MEDIANTE COMPROVAÇÃO.";
+        }
+
+        let arquivoSalvo = null;
+        const btn = document.getElementById('btnSalvarPMOCExec');
+        btn.disabled = true;
+
+        if (fileInput.files.length > 0) {
+            btn.textContent = 'Enviando foto/anexo...';
+            try {
+                const formData = new FormData();
+                formData.append('file', await otimizarImagemCliente(fileInput.files[0]));
+                const resUpload = await apiFetch('/api/upload', { method: 'POST', body: formData });
+                const dataUp = await resUpload.json();
+                if (!resUpload.ok) throw new Error(dataUp.erro || "Falha no envio do anexo");
+                arquivoSalvo = dataUp.arquivo;
+            } catch (err) {
+                alert("Erro no anexo: " + err.message);
+                btn.disabled = false;
+                ajustarCamposPMOCExec();
+                return;
+            }
+        }
+
+        const checklist = [];
+        const itensElements = document.querySelectorAll('#listaChecklistMobile .check-item-mobile');
+        itensElements.forEach(el => {
+            const cod = el.querySelector('.chk-cod-exec')?.value;
+            const desc = el.querySelector('.chk-desc-exec')?.value;
+            const grp = el.querySelector('.chk-grp-exec')?.value;
+            const st = el.querySelector('.chk-status-exec')?.value;
+            const obs = el.querySelector('.chk-obs-exec')?.value?.trim().toUpperCase();
+            if (cod) {
+                checklist.push({
+                    item_codigo: cod,
+                    item_descricao: desc,
+                    grupo: grp,
+                    status_item: st,
+                    observacao: obs
+                });
+            }
+        });
+
+        btn.textContent = 'Gravando...';
+        try {
+            const payload = {
+                tensao_medida: tensao,
+                corrente_medida: corrente,
+                temperatura_insuflamento: tempIns,
+                temperatura_retorno: tempRet,
+                observacoes_execucao: obsTexto,
+                arquivo_folha_assinada: arquivoSalvo,
+                checklist: checklist,
+                enviar_validacao: enviarValidacao
+            };
+
+            const res = await apiFetch(`/api/pmoc/manutencoes/${pmocAtual.id}/atendimento`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(enviarValidacao
+                    ? "O.S. de Manutenção Preventiva concluída com sucesso!"
+                    : "Andamento da preventiva salvo com sucesso!");
+                fecharModal('modalTratarPMOCExec');
+                carregarPMOCServer();
+            } else {
+                alert(data.erro || "Erro ao gravar atendimento.");
+            }
+        } catch (err) {
+            alert("Erro de comunicação com o servidor.");
+        } finally {
+            btn.disabled = false;
+            ajustarCamposPMOCExec();
+        }
+    }
+</script>
+</body>
+</html>
