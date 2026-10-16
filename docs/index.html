@@ -47,8 +47,14 @@
         </div>
     </div>
 
+<script src="config.js?v=1.1"></script>
 <script>
-    let servidorBaseUrl = ""; 
+    let servidorBaseUrl = "";
+    if (typeof window !== 'undefined' && window.location.hostname && !['localhost', '127.0.0.1'].includes(window.location.hostname) && !window.location.hostname.endsWith('.local')) {
+        if (window.SGME_CONFIG && window.SGME_CONFIG.API_URL) {
+            servidorBaseUrl = window.SGME_CONFIG.API_URL.replace(/\/+$/, '');
+        }
+    } 
     let usuarioLogado = null;
 
     window.addEventListener('DOMContentLoaded', () => {
