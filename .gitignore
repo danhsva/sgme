@@ -1,0 +1,14 @@
+backend/venv/
+backend/__pycache__/
+*.pyc
+dados/*.db
+dados/*.db-wal
+dados/*.db-shm
+dados/uploads/
+dados/current_tunnel_url.txt
+dados/*.log
+__pycache__/
+.DS_Store
+*.log
+uploads/
+dados/.secret_key

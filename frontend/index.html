@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGME - Acesso ao Sistema</title>
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --border: #e2e8f0; --danger: #ef4444; --success: #10b981; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 15px; }
+        .card { background: var(--card); border-radius: 14px; padding: 30px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); width: 100%; max-width: 400px; border: 1px solid var(--border); text-align: center; }
+        h2 { color: var(--primary-dark); font-size: 22px; margin-bottom: 4px; }
+        .subtitulo { font-size: 13px; color: #64748b; margin-bottom: 25px; line-height: 1.4; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; text-align: left; color: #475569; }
+        input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 18px; font-size: 14px; background: #f8fafc; }
+        input#loginUser { text-transform: lowercase; }
+        button { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; transition: 0.2s; }
+        button:hover { background: var(--primary-dark); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .modal-box { background: #ffffff; border-radius: 12px; padding: 25px; width: 100%; max-width: 380px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>SGME</h2>
+        <div class="subtitulo">Sistema de Gestão de Manutenção de Equipamentos</div>
+        <form onsubmit="fazerLogin(event)">
+            <label>Login:</label>
+            <input type="text" id="loginUser" required placeholder="Seu usuário" autocomplete="username">
+            <label>Senha:</label>
+            <input type="password" id="loginSenha" required placeholder="Sua senha" autocomplete="current-password">
+            <button type="submit" id="btnEntrar">Entrar no Sistema</button>
+        </form>
+    </div>
+
+    <div id="modalSenha" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 style="color: var(--primary-dark); margin-bottom: 10px;">Defina sua Nova Senha</h3>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Este é o seu primeiro acesso. Por segurança, crie uma senha pessoal:</p>
+            <form onsubmit="salvarNovaSenha(event)">
+                <label>Nova Senha:</label><input type="password" id="novaSenhaInput" required minlength="4">
+                <button type="submit" style="background: var(--success);">Salvar e Acessar</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+    let servidorBaseUrl = ""; 
+    let usuarioLogado = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const sessao = localStorage.getItem('os_usuario_logado');
+        if (sessao) {
+            usuarioLogado = JSON.parse(sessao);
+            redirecionarParaPerfil(usuarioLogado.perfil);
+        }
+    });
+
+    function getApiUrl(ep) { return `${servidorBaseUrl}${ep}`; }
+
+    async function fazerLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnEntrar');
+        btn.disabled = true; btn.textContent = 'Autenticando...';
+        
+        try {
+            const payload = {
+                login: document.getElementById('loginUser').value.trim().toLowerCase(),
+                senha: document.getElementById('loginSenha').value
+            };
+            const res = await fetch(getApiUrl('/api/login'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                usuarioLogado = data;
+                localStorage.setItem('os_usuario_logado', JSON.stringify(data));
+                
+                if (data.primeiro_acesso === 1) {
+                    document.getElementById('modalSenha').classList.remove('hidden');
+                } else {
+                    redirecionarParaPerfil(data.perfil);
+                }
+            } else {
+                alert(data.erro || "Falha na autenticação.");
+            }
+        } catch(err) {
+            alert("Erro de comunicação com o servidor.");
+        } finally {
+            btn.disabled = false; btn.textContent = 'Entrar no Sistema';
+        }
+    }
+
+    async function salvarNovaSenha(e) {
+        e.preventDefault();
+        const nova = document.getElementById('novaSenhaInput').value;
+        const res = await fetch(getApiUrl('/api/trocar-senha'), {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${usuarioLogado.token}`
+            },
+            body: JSON.stringify({ usuario_id: usuarioLogado.id, nova_senha: nova })
+        });
+        
+        if (res.ok) {
+            usuarioLogado.primeiro_acesso = 0;
+            localStorage.setItem('os_usuario_logado', JSON.stringify(usuarioLogado));
+            alert("Senha definida com sucesso!");
+            redirecionarParaPerfil(usuarioLogado.perfil);
+        } else {
+            alert((await res.json().catch(() => ({}))).erro || "Erro ao salvar nova senha.");
+        }
+    }
+
+    function redirecionarParaPerfil(perfil) {
+        if (perfil === 'administrador') window.location.href = 'admin.html';
+        else if (perfil === 'fiscal') window.location.href = 'fiscal.html';
+        else if (perfil === 'contratada') window.location.href = 'contratada.html';
+        else if (perfil === 'executante') window.location.href = 'executante.html';
+        else window.location.href = 'solicitante.html';
+    }
+</script>
+</body>
+</html>
