@@ -1,3 +1,3 @@
 window.SGME_CONFIG = {
-    API_URL: "https://did-organisations-pulling-metropolitan.trycloudflare.com"
+    API_URL: "https://extra-simply-terrorism-valuable.trycloudflare.com"
 };
