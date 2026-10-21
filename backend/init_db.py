@@ -110,7 +110,8 @@ cursor.execute('''
 CREATE TABLE os_instalacao (
     os_id INTEGER PRIMARY KEY, marca TEXT NOT NULL, tipo_equipamento TEXT NOT NULL, capacidade TEXT,
     comarca TEXT NOT NULL, predio TEXT NOT NULL, sala TEXT NOT NULL, tombo TEXT,
-    foto_evaporadora TEXT, foto_condensadora TEXT, equipamento_novo_id INTEGER,
+    foto_evaporadora TEXT, foto_condensadora TEXT, foto_tubulacao TEXT, foto_dreno TEXT,
+    arquivo_os_assinada_original TEXT, equipamento_novo_id INTEGER,
     FOREIGN KEY (os_id) REFERENCES ordens_servico(id) ON DELETE CASCADE,
     FOREIGN KEY (equipamento_novo_id) REFERENCES equipamentos(id)
 );

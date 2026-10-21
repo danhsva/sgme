@@ -39,6 +39,7 @@ from pmoc_planejamento import (
     limpar_chamados_teste, obter_plano_preventiva_janela_movel,
     sincronizar_calendario_equipamento, obter_dados_relatorio_ciclo_pmoc
 )
+from relatorio_fotografico_pdf import gerar_pdf_conclusao_instalacao
 
 # Configurações Oficiais SGME (Oracle VPS)
 def _obter_dados_dir():
@@ -698,7 +699,7 @@ def historico_os_equipamento(usuario_atual, eq_id):
                    COALESCE(oi.sala, eq.sala) AS sala, 
                    COALESCE(oi.marca, eq.marca) AS marca,
                    COALESCE(oi.tombo, eq.tombo) AS tombo,
-                   oi.foto_evaporadora, oi.foto_condensadora, oi.equipamento_novo_id,
+                   oi.foto_evaporadora, oi.foto_condensadora, oi.foto_tubulacao, oi.foto_dreno, oi.arquivo_os_assinada_original, oi.equipamento_novo_id,
                    u.nome as nome_solicitante 
             FROM ordens_servico os 
             LEFT JOIN equipamentos eq ON os.equipamento_id = eq.id
@@ -788,7 +789,7 @@ def gerenciar_os(usuario_atual):
                        COALESCE(oi.tombo, eq.tombo) AS tombo,
                        COALESCE(os.contrato_id, eq.contrato_id) AS contrato_id, 
                        COALESCE(oi.marca, eq.marca) AS marca, 
-                       oi.foto_evaporadora, oi.foto_condensadora, oi.equipamento_novo_id,
+                       oi.foto_evaporadora, oi.foto_condensadora, oi.foto_tubulacao, oi.foto_dreno, oi.arquivo_os_assinada_original, oi.equipamento_novo_id,
                        u.nome as nome_solicitante, c.numero_contrato as contrato_nome
                 FROM ordens_servico os 
                 LEFT JOIN equipamentos eq ON os.equipamento_id = eq.id
@@ -830,7 +831,7 @@ def obter_detalhes_os(usuario_atual, os_id):
         uid = usuario_atual['id']
 
         os_info = conn.execute('''
-            SELECT os.*, COALESCE(oi.tipo_equipamento,eq.tipo_equipamento) AS tipo_equipamento, COALESCE(oi.capacidade,eq.capacidade) AS capacidade, COALESCE(oi.comarca,eq.comarca) AS comarca, COALESCE(oi.predio,eq.predio) AS predio, COALESCE(oi.sala,eq.sala) AS sala, COALESCE(oi.tombo,eq.tombo) AS tombo, COALESCE(os.contrato_id,eq.contrato_id) AS contrato_id, COALESCE(oi.marca,eq.marca) AS marca, oi.foto_evaporadora, oi.foto_condensadora, oi.equipamento_novo_id,
+            SELECT os.*, COALESCE(oi.tipo_equipamento,eq.tipo_equipamento) AS tipo_equipamento, COALESCE(oi.capacidade,eq.capacidade) AS capacidade, COALESCE(oi.comarca,eq.comarca) AS comarca, COALESCE(oi.predio,eq.predio) AS predio, COALESCE(oi.sala,eq.sala) AS sala, COALESCE(oi.tombo,eq.tombo) AS tombo, COALESCE(os.contrato_id,eq.contrato_id) AS contrato_id, COALESCE(oi.marca,eq.marca) AS marca, oi.foto_evaporadora, oi.foto_condensadora, oi.foto_tubulacao, oi.foto_dreno, oi.arquivo_os_assinada_original, oi.equipamento_novo_id,
                    u.nome as nome_solicitante, ex.nome as nome_executante, c.numero_contrato as contrato_nome
             FROM ordens_servico os 
             LEFT JOIN equipamentos eq ON os.equipamento_id = eq.id
@@ -915,6 +916,8 @@ def atualizar_status_os(usuario_atual, os_id):
         tombo_novo = str(dados.get('tombo','')).strip().upper()
         foto_evaporadora = dados.get('foto_evaporadora')
         foto_condensadora = dados.get('foto_condensadora')
+        foto_tubulacao = dados.get('foto_tubulacao')
+        foto_dreno = dados.get('foto_dreno')
         
         perfil = usuario_atual['perfil']
         uid = usuario_atual['id']
@@ -925,10 +928,20 @@ def atualizar_status_os(usuario_atual, os_id):
         conn = get_db_connection()
         conn.execute('BEGIN IMMEDIATE')  # serializa decisões concorrentes sobre a mesma O.S.
         os_info = conn.execute('''
-            SELECT os.*, COALESCE(os.contrato_id,eq.contrato_id) AS contrato_id, oi.tombo, oi.foto_evaporadora, oi.foto_condensadora, oi.equipamento_novo_id 
+            SELECT os.*, COALESCE(os.contrato_id,eq.contrato_id) AS contrato_id, 
+                   oi.tombo, oi.foto_evaporadora, oi.foto_condensadora, oi.foto_tubulacao, oi.foto_dreno, 
+                   oi.arquivo_os_assinada_original, oi.equipamento_novo_id,
+                   COALESCE(oi.tipo_equipamento,eq.tipo_equipamento) AS tipo_equipamento,
+                   COALESCE(oi.capacidade,eq.capacidade) AS capacidade,
+                   COALESCE(oi.comarca,eq.comarca) AS comarca,
+                   COALESCE(oi.predio,eq.predio) AS predio,
+                   COALESCE(oi.sala,eq.sala) AS sala,
+                   COALESCE(oi.marca,eq.marca) AS marca,
+                   c.numero_contrato AS contrato_nome
             FROM ordens_servico os 
             LEFT JOIN equipamentos eq ON os.equipamento_id = eq.id
             LEFT JOIN os_instalacao oi ON oi.os_id = os.id 
+            LEFT JOIN contratos c ON COALESCE(os.contrato_id, eq.contrato_id) = c.id
             WHERE os.id = ?
         ''', (os_id,)).fetchone()
 
@@ -992,15 +1005,69 @@ def atualizar_status_os(usuario_atual, os_id):
 
         if os_info['tipo_os'] in ('instalacao','substituicao') and status_novo in ('em_analise','concluida'):
             tombo_final = tombo_novo or (os_info['tombo'] or '')
-            fe = foto_evaporadora or os_info['foto_evaporadora']; fc = foto_condensadora or os_info['foto_condensadora']
-            if not tombo_final or tombo_final == 'S/T' or not arquivo_conclusao and not os_info['arquivo_conclusao'] or not fe or not fc:
-                conn.close(); return jsonify({'erro':'Tombo, fotos da evaporadora e condensadora e folha assinada são obrigatórios.'}),400
-            for nome in [x for x in (arquivo_conclusao,fe,fc) if x]:
-                if secure_filename(nome)!=nome or not os.path.isfile(os.path.join(UPLOAD_FOLDER,nome)):
-                    conn.close(); return jsonify({'erro':'Anexo de instalação inválido ou inexistente.'}),400
-            dup=conn.execute("SELECT 1 FROM equipamentos WHERE ativo=1 AND UPPER(tombo)=? AND id IS NOT ?",(tombo_final,os_info['equipamento_id'])).fetchone()
-            if dup: conn.close(); return jsonify({'erro':'Já existe equipamento ativo com este tombo.'}),409
-            conn.execute("UPDATE os_instalacao SET tombo=?,foto_evaporadora=COALESCE(?,foto_evaporadora),foto_condensadora=COALESCE(?,foto_condensadora) WHERE os_id=?",(tombo_final,foto_evaporadora,foto_condensadora,os_id))
+            fe = foto_evaporadora or os_info['foto_evaporadora']
+            fc = foto_condensadora or os_info['foto_condensadora']
+            ft = foto_tubulacao or os_info['foto_tubulacao']
+            fd = foto_dreno or os_info['foto_dreno']
+            arq_os = arquivo_conclusao or os_info['arquivo_os_assinada_original'] or os_info['arquivo_conclusao']
+            
+            if not tombo_final or tombo_final == 'S/T' or not arq_os or not fe or not fc or not ft or not fd:
+                conn.close()
+                return jsonify({'erro':'Tombo, 4 fotos obrigatórias (evaporadora, condensadora, tubulação e dreno) e folha de O.S. assinada são obrigatórios.'}), 400
+                
+            for nome in [x for x in (arquivo_conclusao, fe, fc, ft, fd) if x]:
+                if secure_filename(nome) != nome or not os.path.isfile(os.path.join(UPLOAD_FOLDER, nome)):
+                    conn.close()
+                    return jsonify({'erro':'Anexo de instalação inválido ou inexistente.'}), 400
+                    
+            dup = conn.execute("SELECT 1 FROM equipamentos WHERE ativo=1 AND UPPER(tombo)=? AND id IS NOT ?",(tombo_final, os_info['equipamento_id'])).fetchone()
+            if dup:
+                conn.close()
+                return jsonify({'erro':'Já existe equipamento ativo com este tombo.'}), 409
+                
+            arq_original = arquivo_conclusao if arquivo_conclusao else (os_info['arquivo_os_assinada_original'] or arq_os)
+            precisa_gerar_pdf = bool(arquivo_conclusao or foto_evaporadora or foto_condensadora or foto_tubulacao or foto_dreno or not os_info['arquivo_conclusao'])
+            
+            if precisa_gerar_pdf:
+                pdf_unificado_nome = f"os_{os_id}_conclusao_completa_{int(time.time())}.pdf"
+                pdf_unificado_path = os.path.join(UPLOAD_FOLDER, pdf_unificado_nome)
+                dados_relatorio = {
+                    'id': os_info['id'],
+                    'data_conclusao_str': time.strftime('%d/%m/%Y'),
+                    'contrato_str': os_info['contrato_nome'] or (f"Contrato #{os_info['contrato_id']}" if os_info['contrato_id'] else '-'),
+                    'comarca': os_info['comarca'] or '-',
+                    'predio': os_info['predio'] or '-',
+                    'sala': os_info['sala'] or '-',
+                    'tipo_equipamento': os_info['tipo_equipamento'] or '',
+                    'capacidade': os_info['capacidade'] or '',
+                    'marca': os_info['marca'] or '',
+                    'tombo': tombo_final
+                }
+                fotos_dict = {
+                    'evaporadora': os.path.join(UPLOAD_FOLDER, fe),
+                    'condensadora': os.path.join(UPLOAD_FOLDER, fc),
+                    'tubulacao': os.path.join(UPLOAD_FOLDER, ft),
+                    'dreno': os.path.join(UPLOAD_FOLDER, fd)
+                }
+                caminho_os_assinada = os.path.join(UPLOAD_FOLDER, arq_original)
+                try:
+                    gerar_pdf_conclusao_instalacao(dados_relatorio, caminho_os_assinada, fotos_dict, pdf_unificado_path)
+                    arquivo_conclusao = pdf_unificado_nome
+                except Exception as e_pdf:
+                    print(f"[ERRO-GERAR-PDF-CONCLUSAO] {e_pdf}")
+                    if not arquivo_conclusao:
+                        arquivo_conclusao = arq_original
+
+            conn.execute('''
+                UPDATE os_instalacao 
+                SET tombo=?, 
+                    foto_evaporadora=COALESCE(?,foto_evaporadora), 
+                    foto_condensadora=COALESCE(?,foto_condensadora),
+                    foto_tubulacao=COALESCE(?,foto_tubulacao),
+                    foto_dreno=COALESCE(?,foto_dreno),
+                    arquivo_os_assinada_original=?
+                WHERE os_id=?
+            ''', (tombo_final, foto_evaporadora, foto_condensadora, foto_tubulacao, foto_dreno, arq_original, os_id))
         if status_novo == 'em_analise' and perfil in ['contratada', 'executante']:
             if not arquivo_conclusao and not os_info['arquivo_conclusao']:
                 conn.close()
@@ -1111,7 +1178,7 @@ def gerar_pdf_os_endpoint(usuario_atual, os_id):
         uid = usuario_atual['id']
 
         os_info = conn.execute('''
-            SELECT os.*, COALESCE(oi.tipo_equipamento,eq.tipo_equipamento) AS tipo_equipamento, COALESCE(oi.capacidade,eq.capacidade) AS capacidade, COALESCE(oi.comarca,eq.comarca) AS comarca, COALESCE(oi.predio,eq.predio) AS predio, COALESCE(oi.sala,eq.sala) AS sala, COALESCE(oi.tombo,eq.tombo) AS tombo, COALESCE(os.contrato_id,eq.contrato_id) AS contrato_id, COALESCE(oi.marca,eq.marca) AS marca, oi.foto_evaporadora, oi.foto_condensadora, oi.equipamento_novo_id,
+            SELECT os.*, COALESCE(oi.tipo_equipamento,eq.tipo_equipamento) AS tipo_equipamento, COALESCE(oi.capacidade,eq.capacidade) AS capacidade, COALESCE(oi.comarca,eq.comarca) AS comarca, COALESCE(oi.predio,eq.predio) AS predio, COALESCE(oi.sala,eq.sala) AS sala, COALESCE(oi.tombo,eq.tombo) AS tombo, COALESCE(os.contrato_id,eq.contrato_id) AS contrato_id, COALESCE(oi.marca,eq.marca) AS marca, oi.foto_evaporadora, oi.foto_condensadora, oi.foto_tubulacao, oi.foto_dreno, oi.arquivo_os_assinada_original, oi.equipamento_novo_id,
                    u.nome as nome_solicitante, ex.nome as nome_executante, c.numero_contrato as contrato_nome
             FROM ordens_servico os 
             LEFT JOIN equipamentos eq ON os.equipamento_id = eq.id
@@ -2311,8 +2378,8 @@ def baixar_anexo(usuario_atual, filename):
             SELECT os.id, os.solicitante_id, os.executante_id, os.status, COALESCE(os.contrato_id, eq.contrato_id) AS contrato_id
             FROM ordens_servico os LEFT JOIN equipamentos eq ON os.equipamento_id = eq.id
             LEFT JOIN os_instalacao oi ON oi.os_id = os.id
-            WHERE os.arquivo_conclusao = ? OR oi.foto_evaporadora = ? OR oi.foto_condensadora = ?
-        ''', (nome_limpo,nome_limpo,nome_limpo)).fetchone()
+            WHERE os.arquivo_conclusao = ? OR oi.foto_evaporadora = ? OR oi.foto_condensadora = ? OR oi.foto_tubulacao = ? OR oi.foto_dreno = ? OR oi.arquivo_os_assinada_original = ?
+        ''', (nome_limpo, nome_limpo, nome_limpo, nome_limpo, nome_limpo, nome_limpo)).fetchone()
 
         permitido = False
         if os_info is not None:

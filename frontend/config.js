@@ -1,3 +1,3 @@
 window.SGME_CONFIG = {
-    API_URL: "https://tired-nursery-orange-needed.trycloudflare.com"
+    API_URL: "https://did-organisations-pulling-metropolitan.trycloudflare.com"
 };

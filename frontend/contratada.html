@@ -124,8 +124,21 @@
                     <textarea id="tratarOsObs" rows="3" placeholder="Insira instruções para o técnico..."></textarea>
                 </div>
 
-                <div id="boxInstalacaoContr" class="hidden" style="background:#eff6ff;padding:12px;border:1px dashed #2563eb;border-radius:6px;margin-bottom:15px"><label>Tombo do novo equipamento:</label><input type="text" id="tomboInstContr"><label>Foto da evaporadora:</label><input type="file" id="fotoEvapContr" accept="image/*"><label>Foto da condensadora:</label><input type="file" id="fotoCondContr" accept="image/*"></div><div id="boxAnexoConclusao" class="hidden" style="background:#ecfdf5;padding:12px;border-radius:6px;border:1px dashed #10b981;margin-bottom:15px;">
-                    <label style="color:#065f46;">Foto ou PDF da O.S. Assinada (Obrigatório para Validação):</label>
+                <div id="boxInstalacaoContr" class="hidden" style="background:#eff6ff;padding:12px;border:1px dashed #2563eb;border-radius:6px;margin-bottom:15px">
+                    <div style="font-weight:bold;color:#1e40af;margin-bottom:8px;">📦 Dados e Fotos Obrigatórias da Instalação (4 Fotos)</div>
+                    <label>Tombo do novo equipamento:</label>
+                    <input type="text" id="tomboInstContr" placeholder="Número do tombo patrimonial">
+                    <label>1. Foto da Unidade Evaporadora:</label>
+                    <input type="file" id="fotoEvapContr" accept="image/*">
+                    <label>2. Foto da Unidade Condensadora:</label>
+                    <input type="file" id="fotoCondContr" accept="image/*">
+                    <label>3. Foto da Tubulação Frigorígera Aparente:</label>
+                    <input type="file" id="fotoTubContr" accept="image/*">
+                    <label>4. Foto do Dreno Aparente:</label>
+                    <input type="file" id="fotoDrenoContr" accept="image/*">
+                </div>
+                <div id="boxAnexoConclusao" class="hidden" style="background:#ecfdf5;padding:12px;border-radius:6px;border:1px dashed #10b981;margin-bottom:15px;">
+                    <label style="color:#065f46;font-weight:bold;">📄 Foto ou PDF da O.S. Concluída / Assinada (Página 1 do Relatório):</label>
                     <input type="file" id="arquivoOS" accept="image/jpeg,image/png,application/pdf">
                 </div>
 
@@ -479,7 +492,7 @@
 
             const boxLink = document.getElementById('boxLinkAnexo');
             if (boxLink) {
-                if (os.arquivo_conclusao || os.foto_evaporadora || os.foto_condensadora) {
+                if (os.arquivo_conclusao || os.foto_evaporadora || os.foto_condensadora || os.foto_tubulacao || os.foto_dreno) {
                     boxLink.innerHTML = linksAnexosOS(os);
                     boxLink.classList.remove('hidden');
                 } else { boxLink.classList.add('hidden'); }
@@ -529,7 +542,7 @@
         let obsTexto = document.getElementById('tratarOsObs').value.trim().toUpperCase();
         const execId = document.getElementById('tratarOsExecutante').value;
         const fileInput = document.getElementById('arquivoOS');
-        let nomeArquivoSalvo = null; let fotoEvap=null; let fotoCond=null;
+        let nomeArquivoSalvo = null; let fotoEvap=null; let fotoCond=null; let fotoTub=null; let fotoDreno=null;
 
         if (statusNovo === 'em_execucao') {
             if (!execId) return alert("Selecione um Técnico Executante.");
@@ -537,14 +550,37 @@
         } else if (statusNovo === 'aguardando_peca') {
             if (!obsTexto) return alert("Relate qual peça está pendente.");
         } else if (statusNovo === 'em_analise') {
-            if (osAtual && ['instalacao','substituicao'].includes(osAtual.tipo_os)) { if(!document.getElementById('tomboInstContr').value.trim() || !document.getElementById('fotoEvapContr').files[0] || !document.getElementById('fotoCondContr').files[0]) return alert('Informe tombo e as duas fotos do equipamento.'); fotoEvap=await enviarArquivoSGME(document.getElementById('fotoEvapContr').files[0],'Evaporadora'); fotoCond=await enviarArquivoSGME(document.getElementById('fotoCondContr').files[0],'Condensadora'); }
-            if (fileInput.files.length === 0) return alert("Para enviar à validação do Fiscal, anexe a folha de O.S. assinada (Foto ou PDF).");
+            if (osAtual && ['instalacao','substituicao'].includes(osAtual.tipo_os)) {
+                const tomboVal = (document.getElementById('tomboInstContr').value || '').trim();
+                const fEvap = document.getElementById('fotoEvapContr').files[0];
+                const fCond = document.getElementById('fotoCondContr').files[0];
+                const fTub = document.getElementById('fotoTubContr').files[0];
+                const fDreno = document.getElementById('fotoDrenoContr').files[0];
+
+                if (!tomboVal || !fEvap || !fCond || !fTub || !fDreno) {
+                    return alert('Para conclusão de instalação/substituição, informe o tombo e anexe as 4 fotos obrigatórias: evaporadora, condensadora, tubulação frigorígera e dreno aparente.');
+                }
+
+                const btn = document.getElementById('btnSalvarTratamento');
+                btn.disabled = true; btn.textContent = 'Enviando fotos da instalação...';
+                try {
+                    fotoEvap = await enviarArquivoSGME(fEvap, '1. Foto Evaporadora');
+                    fotoCond = await enviarArquivoSGME(fCond, '2. Foto Condensadora');
+                    fotoTub = await enviarArquivoSGME(fTub, '3. Foto Tubulação Frigorígera');
+                    fotoDreno = await enviarArquivoSGME(fDreno, '4. Foto Dreno Aparente');
+                } catch (errFoto) {
+                    alert("Erro ao enviar fotos da instalação: " + errFoto.message);
+                    btn.disabled = false; btn.textContent = 'Confirmar Ação';
+                    return;
+                }
+            }
+            if (fileInput.files.length === 0) return alert("Para enviar à validação do Fiscal, anexe a folha de O.S. concluída (Foto ou PDF).");
             if (!obsTexto) obsTexto = "ATENDIMENTO FINALIZADO PELA CONTRATADA. ENVIADO PARA VALIDAÇÃO DO FISCAL.";
 
             const formData = new FormData();
             document.getElementById('btnSalvarTratamento').disabled = true; formData.append('file', await otimizarImagemCliente(fileInput.files[0]));
             const btn = document.getElementById('btnSalvarTratamento');
-            btn.disabled = true; btn.textContent = 'Enviando Foto/PDF...';
+            btn.disabled = true; btn.textContent = 'Enviando Foto/PDF da O.S....';
 
             try {
                 const resUpload = await apiFetch('/api/upload', { method: 'POST', body: formData });
@@ -552,21 +588,26 @@
                 if (!resUpload.ok) throw new Error(dataUp.erro || "Falha no upload");
                 nomeArquivoSalvo = dataUp.arquivo;
             } catch (err) {
-                alert("Erro ao enviar anexo: " + err.message);
+                alert("Erro ao enviar anexo da O.S.: " + err.message);
                 btn.disabled = false; btn.textContent = 'Confirmar Ação';
                 return;
             }
         }
 
         const btn = document.getElementById('btnSalvarTratamento');
-        btn.disabled = true; btn.textContent = 'Gravando...';
+        btn.disabled = true; btn.textContent = 'Gerando Relatório e Gravando...';
 
         try {
             const p = { 
                 status: statusNovo, 
                 observacao: obsTexto, 
                 executante_id: (statusNovo === 'em_execucao' ? execId : null),
-                arquivo_conclusao: nomeArquivoSalvo, tombo: document.getElementById('tomboInstContr').value, foto_evaporadora: fotoEvap, foto_condensadora: fotoCond
+                arquivo_conclusao: nomeArquivoSalvo, 
+                tombo: document.getElementById('tomboInstContr').value, 
+                foto_evaporadora: fotoEvap, 
+                foto_condensadora: fotoCond,
+                foto_tubulacao: fotoTub,
+                foto_dreno: fotoDreno
             };
 
             const res = await apiFetch(`/api/os/${document.getElementById('tratarOsId').value}/status`, { 

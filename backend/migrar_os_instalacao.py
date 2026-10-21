@@ -52,12 +52,20 @@ COMMIT;''')
 CREATE TABLE IF NOT EXISTS os_instalacao (
  os_id INTEGER PRIMARY KEY, marca TEXT NOT NULL, tipo_equipamento TEXT NOT NULL, capacidade TEXT,
  comarca TEXT NOT NULL, predio TEXT NOT NULL, sala TEXT NOT NULL, tombo TEXT,
- foto_evaporadora TEXT, foto_condensadora TEXT, equipamento_novo_id INTEGER,
+ foto_evaporadora TEXT, foto_condensadora TEXT, foto_tubulacao TEXT, foto_dreno TEXT,
+ arquivo_os_assinada_original TEXT, equipamento_novo_id INTEGER,
  FOREIGN KEY(os_id) REFERENCES ordens_servico(id) ON DELETE CASCADE,
  FOREIGN KEY(equipamento_novo_id) REFERENCES equipamentos(id));
 CREATE INDEX IF NOT EXISTS idx_os_contrato ON ordens_servico(contrato_id);
 CREATE INDEX IF NOT EXISTS idx_os_tipo ON ordens_servico(tipo_os);
 ''')
+        cols_inst = cols(c, 'os_instalacao') if 'os_instalacao' in {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")} else set()
+        if 'foto_tubulacao' not in cols_inst:
+            c.execute('ALTER TABLE os_instalacao ADD COLUMN foto_tubulacao TEXT;')
+        if 'foto_dreno' not in cols_inst:
+            c.execute('ALTER TABLE os_instalacao ADD COLUMN foto_dreno TEXT;')
+        if 'arquivo_os_assinada_original' not in cols_inst:
+            c.execute('ALTER TABLE os_instalacao ADD COLUMN arquivo_os_assinada_original TEXT;')
         c.commit(); c.execute('PRAGMA foreign_keys=ON')
         integridade = c.execute('PRAGMA integrity_check').fetchone()[0]
         if integridade != 'ok':

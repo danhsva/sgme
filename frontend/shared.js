@@ -334,10 +334,14 @@ function descricaoEquipamentoOS(os) {
     return `${marca}${esc(os.tipo_equipamento || '')} ${esc(os.capacidade || '')} (Tombo: ${esc(os.tombo || 'S/T')})`;
 }
 function linksAnexosOS(os) {
+    const isInst = ['instalacao', 'substituicao'].includes(os.tipo_os);
+    const rotuloConclusao = isInst ? '📄 O.S. Assinada & Relatório Fotográfico (PDF)' : '📄 Folha de O.S. Assinada';
     const itens = [
-        ['Folha assinada', os.arquivo_conclusao],
+        [rotuloConclusao, os.arquivo_conclusao],
         ['Foto da evaporadora', os.foto_evaporadora],
-        ['Foto da condensadora', os.foto_condensadora]
+        ['Foto da condensadora', os.foto_condensadora],
+        ['Foto da tubulação aparente', os.foto_tubulacao],
+        ['Foto do dreno aparente', os.foto_dreno]
     ].filter(x => x[1]);
     return itens.map(([r,n]) => `<a href="#" onclick="event.preventDefault();abrirAnexo('${esc(n)}');return false;" style="background:#10b981;color:#fff;padding:7px 10px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:12px;display:inline-block;margin:3px;">📎 ${r}</a>`).join('');
 }

@@ -217,8 +217,21 @@
                 </select>
 
                 <!-- CAPTURA DA FOLHA ASSINADA COM A CÂMERA -->
-                <div id="boxInstalacaoExec" class="box-camera-upload hidden"><label>Tombo do novo equipamento:</label><input type="text" id="tomboInstExec" style="width:100%;padding:12px;margin-bottom:12px"><label>📷 Foto da evaporadora:</label><input type="file" id="fotoEvapExec" accept="image/*"><label>📷 Foto da condensadora:</label><input type="file" id="fotoCondExec" accept="image/*"></div><div id="boxAnexoExec" class="box-camera-upload">
-                    <label>📷 Foto ou PDF da O.S. Assinada (Obrigatório):</label>
+                <div id="boxInstalacaoExec" class="box-camera-upload hidden">
+                    <div style="font-weight:bold;color:#1e40af;margin-bottom:8px;">📦 Fotos Obrigatórias da Instalação (4 Fotos)</div>
+                    <label>Tombo do novo equipamento:</label>
+                    <input type="text" id="tomboInstExec" style="width:100%;padding:12px;margin-bottom:12px" placeholder="Número do tombo patrimonial">
+                    <label>📷 1. Foto da Unidade Evaporadora:</label>
+                    <input type="file" id="fotoEvapExec" accept="image/*">
+                    <label>📷 2. Foto da Unidade Condensadora:</label>
+                    <input type="file" id="fotoCondExec" accept="image/*">
+                    <label>📷 3. Foto da Tubulação Frigorígera Aparente:</label>
+                    <input type="file" id="fotoTubExec" accept="image/*">
+                    <label>📷 4. Foto do Dreno Aparente:</label>
+                    <input type="file" id="fotoDrenoExec" accept="image/*">
+                </div>
+                <div id="boxAnexoExec" class="box-camera-upload">
+                    <label>📷 Foto ou PDF da O.S. Concluída / Assinada (Página 1 do Relatório):</label>
                     <input type="file" id="arquivoOSExec" accept="image/*,application/pdf">
                     <div style="font-size:11px;color:#047857;margin-top:-6px;">No celular, toque para abrir a câmera ou galeria</div>
                 </div>
@@ -497,15 +510,33 @@
         const statusNovo = document.getElementById('tratarOsStatus').value;
         let obsTexto = document.getElementById('tratarOsObs').value.trim().toUpperCase();
         const fileInput = document.getElementById('arquivoOSExec');
-        let nomeArquivoSalvo = null; let fotoEvap=null; let fotoCond=null;
+        let nomeArquivoSalvo = null; let fotoEvap=null; let fotoCond=null; let fotoTub=null; let fotoDreno=null;
 
         if (statusNovo === 'aguardando_peca') {
             if (!obsTexto) return alert("É OBRIGATÓRIO informar qual peça está pendente.");
         } else if (statusNovo === 'em_analise') {
             if (osAtual && ['instalacao','substituicao'].includes(osAtual.tipo_os)) {
-                if (!document.getElementById('tomboInstExec').value.trim() || !document.getElementById('fotoEvapExec').files[0] || !document.getElementById('fotoCondExec').files[0]) return alert('Informe o tombo e as fotos da evaporadora e condensadora.');
-                fotoEvap=await enviarArquivoSGME(document.getElementById('fotoEvapExec').files[0],'Evaporadora');
-                fotoCond=await enviarArquivoSGME(document.getElementById('fotoCondExec').files[0],'Condensadora');
+                const tomboVal = (document.getElementById('tomboInstExec').value || '').trim();
+                const fEvap = document.getElementById('fotoEvapExec').files[0];
+                const fCond = document.getElementById('fotoCondExec').files[0];
+                const fTub = document.getElementById('fotoTubExec').files[0];
+                const fDreno = document.getElementById('fotoDrenoExec').files[0];
+
+                if (!tomboVal || !fEvap || !fCond || !fTub || !fDreno) {
+                    return alert('Para concluir a instalação/substituição, informe o tombo e tire as 4 fotos: evaporadora, condensadora, tubulação frigorígera e dreno aparente.');
+                }
+                const btn = document.getElementById('btnSalvarTratamento');
+                btn.disabled = true; btn.textContent = 'Enviando fotos da instalação...';
+                try {
+                    fotoEvap = await enviarArquivoSGME(fEvap, '1. Foto Evaporadora');
+                    fotoCond = await enviarArquivoSGME(fCond, '2. Foto Condensadora');
+                    fotoTub = await enviarArquivoSGME(fTub, '3. Foto Tubulação Frigorígera');
+                    fotoDreno = await enviarArquivoSGME(fDreno, '4. Foto Dreno Aparente');
+                } catch (errFoto) {
+                    alert("Erro ao enviar fotos da instalação: " + errFoto.message);
+                    btn.disabled = false; btn.textContent = '✅ Concluir O.S. (Enviar p/ Fiscal)';
+                    return;
+                }
             }
             if (fileInput.files.length === 0) {
                 return alert("Para finalizar o serviço, é OBRIGATÓRIO tirar foto ou anexar o PDF da folha de O.S. assinada.");
@@ -515,7 +546,7 @@
             const formData = new FormData();
             document.getElementById('btnSalvarTratamento').disabled = true; formData.append('file', await otimizarImagemCliente(fileInput.files[0]));
             const btn = document.getElementById('btnSalvarTratamento');
-            btn.disabled = true; btn.textContent = 'Enviando Foto/PDF...';
+            btn.disabled = true; btn.textContent = 'Enviando Foto/PDF da O.S....';
 
             try {
                 const resUpload = await apiFetch('/api/upload', { method: 'POST', body: formData });
@@ -524,18 +555,27 @@
                 nomeArquivoSalvo = dataUp.arquivo;
             } catch (err) {
                 alert("Erro no upload do anexo: " + err.message);
-                btn.disabled = false; btn.textContent = '✅ Concluir O.S. de Preventiva';
+                btn.disabled = false; btn.textContent = '✅ Concluir O.S. (Enviar p/ Fiscal)';
                 return;
             }
         }
 
         const btn = document.getElementById('btnSalvarTratamento');
-        btn.disabled = true; btn.textContent = 'Gravando...';
+        btn.disabled = true; btn.textContent = 'Gerando Relatório e Gravando...';
 
         try {
             const res = await apiFetch(`/api/os/${document.getElementById('tratarOsId').value}/status`, { 
                 method: 'PUT', 
-                body: JSON.stringify({ status: statusNovo, observacao: obsTexto, arquivo_conclusao: nomeArquivoSalvo, tombo: document.getElementById('tomboInstExec').value, foto_evaporadora: fotoEvap, foto_condensadora: fotoCond }) 
+                body: JSON.stringify({ 
+                    status: statusNovo, 
+                    observacao: obsTexto, 
+                    arquivo_conclusao: nomeArquivoSalvo, 
+                    tombo: document.getElementById('tomboInstExec').value, 
+                    foto_evaporadora: fotoEvap, 
+                    foto_condensadora: fotoCond,
+                    foto_tubulacao: fotoTub,
+                    foto_dreno: fotoDreno
+                }) 
             });
             const data = await res.json();
             

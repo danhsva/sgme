@@ -226,7 +226,7 @@
 
             const boxLink = document.getElementById('boxLinkAnexo');
             if (boxLink) {
-                if (os.arquivo_conclusao || os.foto_evaporadora || os.foto_condensadora) {
+                if (os.arquivo_conclusao || os.foto_evaporadora || os.foto_condensadora || os.foto_tubulacao || os.foto_dreno) {
                     boxLink.innerHTML = linksAnexosOS(os);
                     boxLink.classList.remove('hidden');
                 } else { boxLink.classList.add('hidden'); }
