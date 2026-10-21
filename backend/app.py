@@ -602,11 +602,14 @@ def gerenciar_equipamentos(usuario_atual):
                     conn.close()
                     return jsonify({'erro': 'Contrato não autorizado para o seu perfil.'}), 403
             
-            conn.execute('''INSERT INTO equipamentos (comarca, predio, sala, tipo_equipamento, capacidade, marca, tombo, contrato_id, status_equipamento, ativo) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ATIVO', 1)''', 
+            ts_inst = int(time.time() * 1000)
+            cur = conn.execute('''INSERT INTO equipamentos (comarca, predio, sala, tipo_equipamento, capacidade, marca, tombo, contrato_id, status_equipamento, ativo, data_instalacao) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ATIVO', 1, ?)''', 
                          (d['comarca'].strip().upper(), d['predio'].strip().upper(), d['sala'].strip().upper(), 
                           d['tipo_equipamento'].strip().upper(), d.get('capacidade', '').strip().upper(), 
-                          d.get('marca', '').strip().upper(), d.get('tombo', 'S/T').strip().upper() or 'S/T', contrato_id))
+                          d.get('marca', '').strip().upper(), d.get('tombo', 'S/T').strip().upper() or 'S/T', contrato_id, ts_inst))
+            novo_eq_id = cur.lastrowid
+            sincronizar_calendario_equipamento(novo_eq_id, conn)
             conn.commit()
             conn.close()
             return jsonify({"mensagem": "Equipamento cadastrado com sucesso!"}), 201
@@ -1130,17 +1133,17 @@ def atualizar_status_os(usuario_atual, os_id):
                 novo_id = eq_existente['id']
                 conn.execute('''
                     UPDATE equipamentos 
-                    SET comarca=?, predio=?, sala=?, tipo_equipamento=?, capacidade=?, marca=?, tombo=?, contrato_id=?, status_equipamento='ATIVO', ativo=1 
+                    SET comarca=?, predio=?, sala=?, tipo_equipamento=?, capacidade=?, marca=?, tombo=?, contrato_id=?, status_equipamento='ATIVO', ativo=1, data_instalacao=? 
                     WHERE id=?
                 ''', (inst['comarca'].strip().upper(), inst['predio'].strip().upper(), inst['sala'].strip().upper(),
                       inst['tipo_equipamento'].strip().upper(), (inst['capacidade'] or '').strip().upper(),
-                      (inst['marca'] or '').strip().upper(), tombo_limpo.upper(), os_info['contrato_id'], novo_id))
+                      (inst['marca'] or '').strip().upper(), tombo_limpo.upper(), os_info['contrato_id'], ts, novo_id))
             else:
                 cur=conn.execute(
-                    "INSERT INTO equipamentos(comarca,predio,sala,tipo_equipamento,capacidade,marca,tombo,contrato_id,status_equipamento,ativo) VALUES(?,?,?,?,?,?,?,?,'ATIVO',1)",
+                    "INSERT INTO equipamentos(comarca,predio,sala,tipo_equipamento,capacidade,marca,tombo,contrato_id,status_equipamento,ativo,data_instalacao) VALUES(?,?,?,?,?,?,?,?,'ATIVO',1,?)",
                     (inst['comarca'].strip().upper(), inst['predio'].strip().upper(), inst['sala'].strip().upper(),
                      inst['tipo_equipamento'].strip().upper(), (inst['capacidade'] or '').strip().upper(),
-                     (inst['marca'] or '').strip().upper(), (tombo_limpo.upper() if tombo_limpo else 'S/T'), os_info['contrato_id'])
+                     (inst['marca'] or '').strip().upper(), (tombo_limpo.upper() if tombo_limpo else 'S/T'), os_info['contrato_id'], ts)
                 )
                 novo_id=cur.lastrowid
             

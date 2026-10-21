@@ -424,6 +424,7 @@ let _pmocCalFiltros = { ano: new Date().getFullYear(), comarca: '', busca: '', p
 const NOMES_MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 function badgeCicloPMOC(per, status = 'planejado', manutId = null) {
+    if (!per) return '<span style="color:#cbd5e1;font-weight:bold;">—</span>';
     const mapaEstilos = {
         'A': { fundo: '#f3e8ff', texto: '#6b21a8', borda: '#c084fc', titulo: 'Anual' },
         'S': { fundo: '#ffedd5', texto: '#9a3412', borda: '#fdba74', titulo: 'Semestral' },
@@ -620,8 +621,10 @@ function desenharVisaoMatrizEquipamentos(box) {
     equipamentos.forEach(eq => {
         let celulasMeses = '';
         janela.forEach(j => {
-            const mInfo = (eq.meses || {})[j.chave] || { periodicidade: 'M', status: 'planejado' };
-            const badge = badgeCicloPMOC(mInfo.periodicidade, mInfo.status, mInfo.manutencao_id);
+            const mInfo = (eq.meses || {})[j.chave];
+            const badge = (mInfo && mInfo.periodicidade)
+                ? badgeCicloPMOC(mInfo.periodicidade, mInfo.status, mInfo.manutencao_id)
+                : '<span style="color:#cbd5e1;font-weight:bold;">—</span>';
             if (j.tipo === 'atual') {
                 celulasMeses += `<td style="text-align:center;padding:5px 2px;background:#f0f9ff;border-left:1px solid #bae6fd;border-right:1px solid #bae6fd;">${badge}</td>`;
             } else {

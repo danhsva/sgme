@@ -77,6 +77,7 @@ CREATE TABLE equipamentos (
     contrato_id INTEGER,
     status_equipamento TEXT DEFAULT 'ATIVO',
     ativo INTEGER DEFAULT 1,
+    data_instalacao INTEGER,
     FOREIGN KEY (contrato_id) REFERENCES contratos(id)
 );
 ''')

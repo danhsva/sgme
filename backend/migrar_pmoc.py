@@ -142,6 +142,38 @@ def migrar(db_path=None):
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pmoc_cal_status ON pmoc_calendario_anual(status);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pmoc_cal_manut ON pmoc_calendario_anual(manutencao_id);')
 
+    # 6. Coluna data_instalacao e ajuste de cadência preventiva para recém-instalados
+    cols_eq = {r[1] for r in cursor.execute("PRAGMA table_info(equipamentos)").fetchall()}
+    if 'data_instalacao' not in cols_eq:
+        print("[PMOC-MIGRACAO] Adicionando coluna data_instalacao na tabela equipamentos...")
+        cursor.execute("ALTER TABLE equipamentos ADD COLUMN data_instalacao INTEGER;")
+
+    cursor.execute("""
+        UPDATE equipamentos 
+        SET data_instalacao = (
+            SELECT COALESCE(os.data_conclusao, os.data_abertura)
+            FROM os_instalacao oi 
+            JOIN ordens_servico os ON oi.os_id = os.id 
+            WHERE oi.equipamento_novo_id = equipamentos.id
+            ORDER BY os.id DESC LIMIT 1
+        )
+        WHERE data_instalacao IS NULL AND id IN (
+            SELECT equipamento_novo_id FROM os_instalacao WHERE equipamento_novo_id IS NOT NULL
+        );
+    """)
+    conn.commit()
+
+    try:
+        from pmoc_planejamento import sincronizar_calendario_equipamento
+        eqs_instalados = cursor.execute("""
+            SELECT id FROM equipamentos WHERE ativo = 1 AND data_instalacao IS NOT NULL
+        """).fetchall()
+        for eq_row in eqs_instalados:
+            sincronizar_calendario_equipamento(eq_row[0], conn)
+        print(f"[PMOC-MIGRACAO] Planejamento de {len(eqs_instalados)} equipamentos atualizado para regra de recém-instalado.")
+    except Exception as e:
+        print(f"[PMOC-MIGRACAO] Aviso ao sincronizar calendários: {e}")
+
     conn.commit()
     conn.close()
     print("[PMOC-MIGRACAO] Tabelas e índices criados com sucesso!")

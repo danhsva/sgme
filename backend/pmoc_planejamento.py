@@ -51,6 +51,92 @@ def rotulo_periodicidade(p: str) -> str:
     return mapa.get((p or '').upper(), 'MENSAL')
 
 
+def obter_data_instalacao_equipamento(equipamento_id: int, cursor) -> tuple:
+    """
+    Retorna (ano_inst, mes_inst) do equipamento ou None se não identificado.
+    """
+    try:
+        cols_eq = {r[1] for r in cursor.execute("PRAGMA table_info(equipamentos)").fetchall()}
+        if 'data_instalacao' in cols_eq:
+            r = cursor.execute("SELECT data_instalacao FROM equipamentos WHERE id = ?", (equipamento_id,)).fetchone()
+            if r and r[0]:
+                ts = r[0]
+                if ts > 100_000_000_000:
+                    ts = ts / 1000.0
+                dt = datetime.date.fromtimestamp(ts)
+                return (dt.year, dt.month)
+
+        r_os = cursor.execute("""
+            SELECT os.data_conclusao, os.data_abertura 
+            FROM os_instalacao oi 
+            JOIN ordens_servico os ON oi.os_id = os.id 
+            WHERE oi.equipamento_novo_id = ? 
+            ORDER BY os.id DESC LIMIT 1
+        """, (equipamento_id,)).fetchone()
+        if r_os:
+            ts = r_os[0] or r_os[1]
+            if ts:
+                if ts > 100_000_000_000:
+                    ts = ts / 1000.0
+                dt = datetime.date.fromtimestamp(ts)
+                return (dt.year, dt.month)
+    except Exception as e:
+        print(f"[PMOC-PLANEJAMENTO] Erro ao obter data de instalação: {e}")
+    return None
+
+
+def calcular_periodicidade_mes(ano: int, mes: int, data_inst: tuple = None, m0: int = 0) -> str:
+    """
+    Calcula a periodicidade (M, T, S, A) para um determinado mês/ano.
+    
+    Regra TJCE/SGME para Equipamento Novo/Recém-Instalado:
+      No mês em que o equipamento for instalado (e anteriores), NÃO deve inseri-lo
+      no cronograma de manutenções preventivas (retorna None).
+      O cronograma de preventivas inicia SOMENTE no mês seguinte à instalação (Delta >= 1).
+      As próximas manutenções preventivas são obrigatoriamente MENSAIS ('M'), pelo menos as 2 próximas (Delta = 1 e Delta = 2).
+      
+      Evolução temporal (Delta = (ano - ano_inst)*12 + (mes - mes_inst)):
+        Delta <= 0 -> None (Sem preventiva no mês da instalação nem anteriores)
+        Delta = 1  -> M (1ª preventiva subsequente: Mensal)
+        Delta = 2  -> M (2ª preventiva subsequente: Mensal)
+        Delta = 3  -> T (Trimestral - 3 meses de uso)
+        Delta = 4  -> M
+        Delta = 5  -> M
+        Delta = 6  -> S (Semestral - 6 meses de uso)
+        Delta = 7  -> M
+        Delta = 8  -> M
+        Delta = 9  -> T (Trimestral - 9 meses de uso)
+        Delta = 10 -> M
+        Delta = 11 -> M
+        Delta = 12 -> A (Anual - 1 ano completo de operação)
+        Delta > 12 -> Repete o ciclo regular de 12 meses
+    """
+    if data_inst:
+        ano_inst, mes_inst = data_inst
+        delta = (ano - ano_inst) * 12 + (mes - mes_inst)
+        if delta <= 0:
+            return None
+        k = delta % 12
+        if k in (3, 9):
+            return 'T'
+        elif k == 6:
+            return 'S'
+        elif k == 0:
+            return 'A'
+        else:
+            return 'M'
+
+    m_idx = mes - 1
+    if m_idx == (m0 % 12):
+        return 'A'
+    elif m_idx == ((m0 + 6) % 12):
+        return 'S'
+    elif m_idx in (((m0 + 3) % 12), ((m0 + 9) % 12)):
+        return 'T'
+    else:
+        return 'M'
+
+
 def gerar_calendario_anual(ano: int, db_conn=None, forcar: bool = False) -> dict:
     """
     Gera o calendário de 12 meses para todos os equipamentos ativos no ano especificado.
@@ -97,17 +183,16 @@ def gerar_calendario_anual(ano: int, db_conn=None, forcar: bool = False) -> dict
             rnd.shuffle(lista_embaralhada)
 
             for idx, eq in enumerate(lista_embaralhada):
+                data_inst = obter_data_instalacao_equipamento(eq['id'], cursor)
                 m0 = idx % 12
                 for mes in range(1, 13):
-                    m_idx = mes - 1
-                    if m_idx == (m0 % 12):
-                        periodicidade = 'A'
-                    elif m_idx == ((m0 + 6) % 12):
-                        periodicidade = 'S'
-                    elif m_idx in (((m0 + 3) % 12), ((m0 + 9) % 12)):
-                        periodicidade = 'T'
-                    else:
-                        periodicidade = 'M'
+                    periodicidade = calcular_periodicidade_mes(ano, mes, data_inst, m0)
+                    if not periodicidade:
+                        cursor.execute("""
+                            DELETE FROM pmoc_calendario_anual 
+                            WHERE equipamento_id = ? AND ano = ? AND mes = ? AND status = 'planejado' AND manutencao_id IS NULL
+                        """, (eq['id'], ano, mes))
+                        continue
 
                     cursor.execute("""
                         INSERT INTO pmoc_calendario_anual 
@@ -388,13 +473,7 @@ def obter_plano_preventiva_janela_movel(comarca: str = None, equipamento_id: int
                 if (eq_id, chave) in cal_map:
                     eq_meses[chave] = cal_map[(eq_id, chave)]
                 else:
-                    eq_meses[chave] = {
-                        "periodicidade": "M",
-                        "status": "planejado",
-                        "manutencao_id": None,
-                        "manut_status": None,
-                        "executante_nome": None
-                    }
+                    eq_meses[chave] = None
 
             equipamentos_lista.append({
                 "equipamento_id": eq_id,
@@ -594,10 +673,13 @@ def obter_dados_relatorio_ciclo_pmoc(ano: int, mes: int, contrato_id: int = None
             conn.close()
 
 
-def sincronizar_calendario_equipamento(equipamento_id: int, db_conn=None):
+def sincronizar_calendario_equipamento(equipamento_id: int, db_conn=None, ano_instalacao: int = None, mes_instalacao: int = None):
     """
     Garante que um equipamento ativo (novo ou reativado) possua entradas planejadas
     no calendário anual para os meses futuros da janela móvel.
+    Para equipamentos recém-instalados, NÃO insere preventiva no mês da instalação
+    (somente a partir do mês seguinte), garantindo que as próximas manutenções sejam
+    obrigatoriamente MENSAIS ('M'), pelo menos as 2 próximas.
     """
     conn, deve_fechar = _obter_conexao(db_conn)
     try:
@@ -615,33 +697,64 @@ def sincronizar_calendario_equipamento(equipamento_id: int, db_conn=None):
         comarca = (eq['comarca'] or 'OUTROS').strip().upper()
         agora = int(time.time())
 
+        data_inst = None
+        if ano_instalacao and mes_instalacao:
+            data_inst = (ano_instalacao, mes_instalacao)
+        else:
+            data_inst = obter_data_instalacao_equipamento(equipamento_id, cursor)
+
+        if not data_inst:
+            data_inst = (ano_atual, mes_atual)
+
+        if data_inst:
+            ano_inst, mes_inst = data_inst
+            # No mês em que o equipamento for instalado (e anteriores), não deve inseri-lo no cronograma.
+            # Limpa qualquer agendamento pendente/não executado do mês de instalação e anteriores.
+            cursor.execute("""
+                DELETE FROM pmoc_checklist_respostas 
+                WHERE manutencao_id IN (
+                    SELECT id FROM pmoc_manutencoes 
+                    WHERE equipamento_id = ? AND (ano_competencia * 12 + mes_competencia) <= (? * 12 + ?) AND status = 'pendente' AND data_execucao IS NULL
+                );
+            """, (equipamento_id, ano_inst, mes_inst))
+
+            cursor.execute("""
+                DELETE FROM pmoc_manutencoes 
+                WHERE equipamento_id = ? AND (ano_competencia * 12 + mes_competencia) <= (? * 12 + ?) AND status = 'pendente' AND data_execucao IS NULL;
+            """, (equipamento_id, ano_inst, mes_inst))
+
+            cursor.execute("""
+                DELETE FROM pmoc_calendario_anual 
+                WHERE equipamento_id = ? AND (ano * 12 + mes) <= (? * 12 + ?) AND (manutencao_id IS NULL OR status IN ('planejado', 'gerado'));
+            """, (equipamento_id, ano_inst, mes_inst))
+
         for ano in (ano_atual, ano_atual + 1):
             m0 = (eq['id'] + ano) % 12
             for mes in range(1, 13):
-                if ano == ano_atual and mes < mes_atual:
+                per = calcular_periodicidade_mes(ano, mes, data_inst, m0)
+                if not per:
+                    continue
+
+                if not data_inst and (ano == ano_atual and mes < mes_atual):
                     continue
 
                 existe = cursor.execute(
-                    "SELECT 1 FROM pmoc_calendario_anual WHERE equipamento_id = ? AND ano = ? AND mes = ?",
+                    "SELECT id, status, manutencao_id FROM pmoc_calendario_anual WHERE equipamento_id = ? AND ano = ? AND mes = ?",
                     (equipamento_id, ano, mes)
                 ).fetchone()
 
                 if not existe:
-                    m_idx = mes - 1
-                    if m_idx == (m0 % 12):
-                        per = 'A'
-                    elif m_idx == ((m0 + 6) % 12):
-                        per = 'S'
-                    elif m_idx in (((m0 + 3) % 12), ((m0 + 9) % 12)):
-                        per = 'T'
-                    else:
-                        per = 'M'
-
                     cursor.execute("""
                         INSERT INTO pmoc_calendario_anual
                         (equipamento_id, contrato_id, comarca, ano, mes, periodicidade, status, criado_em)
                         VALUES (?, ?, ?, ?, ?, ?, 'planejado', ?)
                     """, (eq['id'], eq['contrato_id'], comarca, ano, mes, per, agora))
+                elif existe['status'] == 'planejado' and not existe['manutencao_id']:
+                    cursor.execute("""
+                        UPDATE pmoc_calendario_anual
+                        SET periodicidade = ?
+                        WHERE id = ?
+                    """, (per, existe['id']))
 
         conn.commit()
     finally:
