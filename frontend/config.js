@@ -1,3 +1,3 @@
 window.SGME_CONFIG = {
-    API_URL: "http://64.181.166.165"
+    API_URL: "https://64.181.166.165.sslip.io"
 };

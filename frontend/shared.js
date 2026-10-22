@@ -4,8 +4,10 @@
  */
 
 let servidorBaseUrl = "";
-if (typeof window !== 'undefined' && window.location.hostname && !['localhost', '127.0.0.1'].includes(window.location.hostname) && !window.location.hostname.endsWith('.local')) {
-    if (window.SGME_CONFIG && window.SGME_CONFIG.API_URL) {
+if (typeof window !== 'undefined' && window.location.hostname) {
+    const h = window.location.hostname;
+    const isDirectVpsOrLocal = ['localhost', '127.0.0.1', '64.181.166.165', '64.181.166.165.sslip.io'].includes(h) || h.endsWith('.local');
+    if (!isDirectVpsOrLocal && window.SGME_CONFIG && window.SGME_CONFIG.API_URL) {
         servidorBaseUrl = window.SGME_CONFIG.API_URL.replace(/\/+$/, '');
     }
 }

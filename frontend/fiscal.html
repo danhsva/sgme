@@ -223,8 +223,8 @@
         </div>
     </div>
 
-<script src="config.js"></script>
-    <script src="shared.js?v=5.8"></script>
+<script src="config.js?v=5.12"></script>
+    <script src="shared.js?v=5.12"></script>
 <script>
 async function abrirNovaInstalacao(){if(!contratosDoFiscal.length)await carregarListaContratosFiscal();if(!equipamentosCache.length)equipamentosCache=await(await apiFetch('/api/equipamentos')).json();document.getElementById('instContrato').innerHTML=contratosDoFiscal.map(c=>`<option value="${c.id}">${esc(c.numero_contrato)} - ${esc(c.nome_empresa)}</option>`).join('');document.getElementById('instEquipSub').innerHTML=equipamentosCache.filter(e=>e.ativo===1).map(e=>`<option value="${e.id}">${esc(e.marca||'')} ${esc(e.tipo_equipamento)} - ${esc(e.comarca)} / ${esc(e.sala)} - ${esc(e.tombo)}</option>`).join('');document.getElementById('instComarca').innerHTML=MUNICIPIOS_CE.map(m=>`<option>${m}</option>`).join('');ajustarModalInstalacao();document.getElementById('modalNovaInstalacao').classList.remove('hidden');}
 function ajustarModalInstalacao(){const sub=document.getElementById('instTipo').value==='substituicao';document.getElementById('instBoxSub').classList.toggle('hidden',!sub);document.getElementById('instBoxContrato').classList.toggle('hidden',sub);}
